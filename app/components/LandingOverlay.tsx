@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import InitialPage from "./InitialPage";
 
 interface LandingOverlayProps {
   onFinished: () => void;
@@ -41,14 +42,7 @@ export default function LandingOverlay({ onFinished }: LandingOverlayProps) {
       }`}
     >
       {phase === "initial" && (
-        <video
-          className="w-full h-full object-cover cursor-pointer"
-          src="/path-to-clickable-blackhole-video.mp4"
-          autoPlay
-          loop
-          playsInline
-          onClick={handleInitialClick}
-        />
+        <InitialPage handleInitialClick={handleInitialClick} />
       )}
       {phase === "transition" && (
         <>

@@ -16,6 +16,7 @@ export default function Home() {
       <main className={`min-h-screen ${showLanding ? "hidden" : "block"}`}>
         {/* Your main portfolio content goes here */}
         <h1 className="text-4xl font-bold">My Portfolio</h1>
+
         {/* Add more static content such as your name, photo, projects, contact info, etc. */}
       </main>
     </div>
