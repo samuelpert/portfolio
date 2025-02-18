@@ -10,27 +10,35 @@ interface LandingOverlayProps {
 type Phase = "initial" | "transition";
 
 export default function LandingOverlay({ onFinished }: LandingOverlayProps) {
-  // 'phase' decides which video to display; 'fadeOut' triggers the fade-out transition.
+  // 'phase' decides which view to display; 'fadeOut' triggers the fade-out transition.
   const [phase, setPhase] = useState<Phase>("initial");
+  // 'zooming' triggers the zoom animation when the initial video is clicked.
+  const [zooming, setZooming] = useState(false);
   const [fadeOut, setFadeOut] = useState(false);
 
-  // When the initial (clickable) video is clicked, switch to the transition video.
+  // When the initial blackhole is clicked, trigger the zoom animation and switch to the transition phase.
   const handleInitialClick = () => {
-    setPhase("transition");
+    if (!zooming) {
+      setZooming(true);
+      // Wait for the zoom animation (now with a bigger scale) to complete before switching phases.
+      setTimeout(() => {
+        setPhase("transition");
+        setZooming(false);
+      }, 1000); // Adjust this duration to match your desired animation length.
+    }
   };
 
-  // When the transition video ends or the user clicks skip, trigger fade-out.
+  // Trigger fade-out when the transition video ends or when the user clicks "skip."
   const triggerFadeOut = () => {
     if (!fadeOut) {
       setFadeOut(true);
-      // Wait for the fade-out to complete before calling onFinished.
       setTimeout(() => {
         onFinished();
       }, 1000); // 1000ms fade-out duration.
     }
   };
 
-  // Handler for when transition video finishes playing.
+  // Handler for when the transition video finishes playing.
   const handleTransitionEnded = () => {
     triggerFadeOut();
   };
@@ -42,7 +50,14 @@ export default function LandingOverlay({ onFinished }: LandingOverlayProps) {
       }`}
     >
       {phase === "initial" && (
-        <InitialPage handleInitialClick={handleInitialClick} />
+        // Wrap the InitialPage in a div that conditionally applies a zoom animation.
+        <div
+          className={`transition-transform duration-1000 origin-[50%_25%] ${
+            zooming ? "scale-[7]" : "scale-100"
+          }`}
+        >
+          <InitialPage handleInitialClick={handleInitialClick} />
+        </div>
       )}
       {phase === "transition" && (
         <>

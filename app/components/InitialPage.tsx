@@ -1,4 +1,5 @@
 import React from "react";
+import { FaLinkedin, FaGithub } from "react-icons/fa";
 
 interface InitialPageProps {
   handleInitialClick: () => void;
@@ -7,25 +8,6 @@ interface InitialPageProps {
 const InitialPage: React.FC<InitialPageProps> = ({ handleInitialClick }) => {
   return (
     <div className="flex flex-col items-center ">
-      <h1 className="mb-4 text-3xl font-extrabold opacity-100 dark:text-white md:text-6xl lg:text-7xl">
-        Click Inside{" "}
-        <span className="text-transparent bg-clip-text bg-gradient-to-r to-yellow-600/100 from-red-400/100">
-          Gargantua!
-        </span>
-      </h1>
-      <h1 className="mb-4 text-3xl font-extrabold opacity-50 dark:text-white md:text-6xl lg:text-7xl">
-        Click Inside{" "}
-        <span className="text-transparent bg-clip-text bg-gradient-to-r to-yellow-600/50 from-red-400/50">
-          Gargantua!
-        </span>
-      </h1>
-      <h1 className="mb-4 text-3xl font-extrabold opacity-25 dark:text-white md:text-6xl lg:text-7xl">
-        Click Inside{" "}
-        <span className="text-transparent bg-clip-text bg-gradient-to-r to-yellow-600/25 from-red-400/25">
-          Gargantua!
-        </span>
-      </h1>
-
       <video
         className="object-contain cursor-pointer w-screen max-h-[60vh] mx-auto"
         autoPlay
@@ -36,6 +18,50 @@ const InitialPage: React.FC<InitialPageProps> = ({ handleInitialClick }) => {
       >
         <source src="/videos/blackholeloop.webm" type="video/webm" />
       </video>
+
+      <p className="text-white text-xl mt-4 blink-animation font-bold mb-40">
+        [Click Inside Gargantua To See My Portfolio]
+      </p>
+
+      <style jsx>{`
+        @keyframes blink {
+          0%,
+          100% {
+            opacity: 1;
+          }
+          50% {
+            opacity: 0;
+          }
+        }
+        .blink-animation {
+          animation: blink 2.5s infinite;
+        }
+      `}</style>
+
+      <div className="flex space-x-4 mt-6">
+        <a
+          href="https://www.linkedin.com/in/samuel-perez-tovar"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center space-x-2"
+        >
+          <FaLinkedin
+            size={40}
+            className="filter brightness-50 hover:brightness-75 transition duration-200"
+          />
+        </a>
+        <a
+          href="https://github.com/samuelpert"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center space-x-2"
+        >
+          <FaGithub
+            size={40}
+            className="filter brightness-50 hover:brightness-75 transition duration-200"
+          />
+        </a>
+      </div>
     </div>
   );
 };
