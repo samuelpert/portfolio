@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import InitialPage from "./InitialPage";
 
 interface LandingOverlayProps {
@@ -10,38 +10,48 @@ interface LandingOverlayProps {
 type Phase = "initial" | "transition";
 
 export default function LandingOverlay({ onFinished }: LandingOverlayProps) {
-  // 'phase' decides which view to display; 'fadeOut' triggers the fade-out transition.
+  // "phase" decides which view to display.
   const [phase, setPhase] = useState<Phase>("initial");
-  // 'zooming' triggers the zoom animation when the initial video is clicked.
+  // "zooming" triggers the zoom animation when the initial video is clicked.
   const [zooming, setZooming] = useState(false);
+  // "fadeOut" triggers the fade-out transition.
   const [fadeOut, setFadeOut] = useState(false);
+  // "videoFadeIn" triggers the video fade in.
+  const [videoFadeIn, setVideoFadeIn] = useState(false);
 
-  // When the initial blackhole is clicked, trigger the zoom animation and switch to the transition phase.
+  // When the initial element is clicked the zoom animation is set to true.
   const handleInitialClick = () => {
     if (!zooming) {
       setZooming(true);
-      // Wait for the zoom animation (now with a bigger scale) to complete before switching phases.
+      // Wait for the zoom animation to finish before switching phases.
       setTimeout(() => {
         setPhase("transition");
         setZooming(false);
-      }, 1000); // Adjust this duration to match your desired animation length.
+      }, 500);
     }
   };
 
-  // Trigger fade-out when the transition video ends or when the user clicks "skip."
+  // Trigger fade-out when the video ends or when the user clicks button skip.
   const triggerFadeOut = () => {
     if (!fadeOut) {
       setFadeOut(true);
       setTimeout(() => {
         onFinished();
-      }, 1000); // 1000ms fade-out duration.
+      }, 1000);
     }
   };
 
-  // Handler for when the transition video finishes playing.
+  // Handler for when the video finishes playing.
   const handleTransitionEnded = () => {
     triggerFadeOut();
   };
+
+  // When phase becomes "transition", trigger the video fade in.
+  useEffect(() => {
+    if (phase === "transition") {
+      setVideoFadeIn(true);
+    }
+  }, [phase]);
 
   return (
     <div
@@ -52,8 +62,8 @@ export default function LandingOverlay({ onFinished }: LandingOverlayProps) {
       {phase === "initial" && (
         // Wrap the InitialPage in a div that conditionally applies a zoom animation.
         <div
-          className={`transition-transform duration-1000 origin-[50%_25%] ${
-            zooming ? "scale-[7]" : "scale-100"
+          className={`transition-transform duration-[2000ms] origin-[50%_25%] ${
+            zooming ? "scale-[100]" : "scale-100"
           }`}
         >
           <InitialPage handleInitialClick={handleInitialClick} />
@@ -62,8 +72,11 @@ export default function LandingOverlay({ onFinished }: LandingOverlayProps) {
       {phase === "transition" && (
         <>
           <video
-            className="w-full h-full object-cover"
-            src="/path-to-transition-video.mp4"
+            // The videoFadeIn state is used to trigger the video fade in.
+            className={`w-full h-full object-cover transition-opacity duration-1000 ${
+              videoFadeIn ? "opacity-100" : "opacity-0"
+            }`}
+            src="/videos/transition.mp4"
             autoPlay
             playsInline
             onEnded={handleTransitionEnded}
