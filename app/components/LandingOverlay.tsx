@@ -83,7 +83,7 @@ export default function LandingOverlay({ onFinished }: LandingOverlayProps) {
           />
           <button
             onClick={triggerFadeOut}
-            className="absolute bottom-10 px-4 py-2 bg-white text-black rounded shadow"
+            className="absolute bottom-10 px-4 py-2 bg-transparent text-white rounded border border-white hover:border-gray-400 hover:text-gray-400 transition duration-200"
           >
             Skip
           </button>

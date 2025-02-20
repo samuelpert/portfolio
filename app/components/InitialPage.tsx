@@ -19,8 +19,12 @@ const InitialPage: React.FC<InitialPageProps> = ({ handleInitialClick }) => {
         <source src="/videos/blackholeloop.webm" type="video/webm" />
       </video>
 
-      <p className="text-white text-xl mt-4 blink-animation font-bold mb-40">
-        [Click Inside Gargantua To See My Portfolio]
+      <p className="text-white text-center text-2xl sm:text-1xl md:text-1xl lg:text-2xl mt-4 blink-animation font-bold mb-40">
+        [
+        <span className="bg-gradient-to-r from-red-500 via-red-400 to-yellow-500 bg-clip-text text-transparent">
+          Click
+        </span>{" "}
+        Inside Gargantua To See My Portfolio]
       </p>
 
       <style jsx>{`
@@ -47,7 +51,7 @@ const InitialPage: React.FC<InitialPageProps> = ({ handleInitialClick }) => {
         >
           <FaLinkedin
             size={40}
-            className="filter brightness-50 hover:brightness-75 transition duration-200"
+            className="text-gray-600 hover:text-gray-400 transition-colors duration-200"
           />
         </a>
         <a
@@ -58,7 +62,7 @@ const InitialPage: React.FC<InitialPageProps> = ({ handleInitialClick }) => {
         >
           <FaGithub
             size={40}
-            className="filter brightness-50 hover:brightness-75 transition duration-200"
+            className="text-gray-600 hover:text-gray-400 transition-colors duration-200"
           />
         </a>
       </div>
