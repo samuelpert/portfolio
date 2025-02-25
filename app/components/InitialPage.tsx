@@ -1,5 +1,6 @@
 import React from "react";
 import { FaLinkedin, FaGithub } from "react-icons/fa";
+import { StarsCanvas } from "@/app/components/StarBackground";
 
 interface InitialPageProps {
   handleInitialClick: () => void;
@@ -8,6 +9,7 @@ interface InitialPageProps {
 const InitialPage: React.FC<InitialPageProps> = ({ handleInitialClick }) => {
   return (
     <div className="flex flex-col items-center ">
+      <StarsCanvas />
       <video
         className="object-contain cursor-pointer w-screen max-h-[60vh] mx-auto"
         autoPlay
@@ -16,6 +18,7 @@ const InitialPage: React.FC<InitialPageProps> = ({ handleInitialClick }) => {
         playsInline
         onClick={handleInitialClick}
       >
+        <source src="/videos/blackholeloop.mov" type="video/quicktime" />
         <source src="/videos/blackholeloop.webm" type="video/webm" />
       </video>
 
