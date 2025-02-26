@@ -11,15 +11,14 @@ const InitialPage: React.FC<InitialPageProps> = ({ handleInitialClick }) => {
     <div className="flex flex-col items-center ">
       <StarsCanvas />
       <video
-        className="object-contain cursor-pointer w-screen max-h-[60vh] mx-auto"
+        className="object-contain cursor-pointer w-screen max-h-[60vh] mx-auto mix-blend-screen relative z-[100]"
         autoPlay
         muted
         loop
         playsInline
         onClick={handleInitialClick}
       >
-        <source src="/videos/blackholeloop.mov" type="video/quicktime" />
-        <source src="/videos/blackholeloop.webm" type="video/webm" />
+        <source src="/videos/blackhole.webm" type="video/webm" />
       </video>
 
       <p className="text-white text-center text-2xl sm:text-1xl md:text-1xl lg:text-2xl mt-4 blink-animation font-bold mb-40">

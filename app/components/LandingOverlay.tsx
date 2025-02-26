@@ -62,7 +62,7 @@ export default function LandingOverlay({ onFinished }: LandingOverlayProps) {
       {phase === "initial" && (
         // Wrap the InitialPage in a div that conditionally applies a zoom animation.
         <div
-          className={`transition-transform duration-[2500ms] origin-[50%_25%] ${
+          className={`transition-transform duration-[2000ms] origin-[50%_25%] ${
             zooming ? "scale-[100]" : "scale-100"
           }`}
         >
@@ -72,11 +72,10 @@ export default function LandingOverlay({ onFinished }: LandingOverlayProps) {
       {phase === "transition" && (
         <>
           <video
-            // The videoFadeIn state is used to trigger the video fade in.
-            className={`w-full h-full object-cover transition-opacity duration-1000 ${
+            className={`w-full h-full object-cover mix-blend-screen transition-opacity duration-1000 ${
               videoFadeIn ? "opacity-100" : "opacity-0"
             }`}
-            src="/videos/transition_optimized.mp4"
+            src="/videos/transition.webm"
             autoPlay
             playsInline
             onEnded={handleTransitionEnded}

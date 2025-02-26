@@ -15,8 +15,7 @@ export default function Home() {
       {showLanding && <LandingOverlay onFinished={handleLandingFinished} />}
       <main className={`min-h-screen ${showLanding ? "hidden" : "block"}`}>
         {/* Your main portfolio content goes here */}
-        <h1 className="text-4xl font-bold">My Portfolio</h1>
-
+        <h1>Hello, world!</h1>
         {/* Add more static content such as your name, photo, projects, contact info, etc. */}
       </main>
     </div>
