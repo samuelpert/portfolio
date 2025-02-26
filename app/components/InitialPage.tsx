@@ -26,7 +26,7 @@ const InitialPage: React.FC<InitialPageProps> = ({ handleInitialClick }) => {
         <span className="bg-gradient-to-r from-red-500 via-red-400 to-yellow-500 bg-clip-text text-transparent">
           Click
         </span>{" "}
-        Inside Gargantua To See My Portfolio]
+        Inside The Blackhole]
       </p>
       <style jsx>{`
         @keyframes blink {
@@ -42,7 +42,7 @@ const InitialPage: React.FC<InitialPageProps> = ({ handleInitialClick }) => {
           animation: blink 2.5s infinite;
         }
       `}</style>
-      <div className="absolute bottom-[1%] flex space-x-4 mb-5">
+      <div className="absolute bottom-[2%] flex space-x-4 mb-5">
         <a
           href="https://www.linkedin.com/in/samuel-perez-tovar"
           target="_blank"
