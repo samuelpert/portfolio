@@ -8,7 +8,7 @@ interface InitialPageProps {
 
 const InitialPage: React.FC<InitialPageProps> = ({ handleInitialClick }) => {
   return (
-    <div className="flex flex-col items-center ">
+    <div className="flex flex-col items-center h-screen">
       <StarsCanvas />
       <video
         className="object-contain cursor-pointer w-screen max-h-[60vh] mx-auto mix-blend-screen relative z-[100]"

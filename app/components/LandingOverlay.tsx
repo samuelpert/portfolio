@@ -72,7 +72,7 @@ export default function LandingOverlay({ onFinished }: LandingOverlayProps) {
       {phase === "transition" && (
         <>
           <video
-            className={`w-full h-full object-cover mix-blend-screen transition-opacity duration-1000 ${
+            className={`w-full h-screen object-cover mix-blend-screen transition-opacity duration-1000 ${
               videoFadeIn ? "opacity-100" : "opacity-0"
             }`}
             src="/videos/transition.webm"
