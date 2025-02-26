@@ -10,8 +10,9 @@ const InitialPage: React.FC<InitialPageProps> = ({ handleInitialClick }) => {
   return (
     <div className="flex flex-col items-center h-screen">
       <StarsCanvas />
+      <div className="h-[10vh]"></div>{" "}
       <video
-        className="object-contain cursor-pointer w-screen max-h-[60vh] mx-auto mix-blend-screen relative z-[100]"
+        className="object-contain cursor-pointer w-screen max-h-[70vh] mx-auto mix-blend-screen relative z-[100]"
         autoPlay
         muted
         loop
@@ -20,15 +21,13 @@ const InitialPage: React.FC<InitialPageProps> = ({ handleInitialClick }) => {
       >
         <source src="/videos/blackhole.webm" type="video/webm" />
       </video>
-
-      <p className="text-white text-center text-2xl sm:text-1xl md:text-1xl lg:text-2xl mt-4 blink-animation font-bold mb-40">
+      <p className="text-white text-center text-1xl sm:text-1xl md:text-2xl lg:text-3xl mt-4 blink-animation font-bold mb-40">
         [
         <span className="bg-gradient-to-r from-red-500 via-red-400 to-yellow-500 bg-clip-text text-transparent">
           Click
         </span>{" "}
         Inside Gargantua To See My Portfolio]
       </p>
-
       <style jsx>{`
         @keyframes blink {
           0%,
@@ -43,8 +42,7 @@ const InitialPage: React.FC<InitialPageProps> = ({ handleInitialClick }) => {
           animation: blink 2.5s infinite;
         }
       `}</style>
-
-      <div className="flex space-x-4 mt-6">
+      <div className="absolute bottom-[1%] flex space-x-4 mb-5">
         <a
           href="https://www.linkedin.com/in/samuel-perez-tovar"
           target="_blank"
