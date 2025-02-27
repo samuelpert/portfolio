@@ -1,22 +1,30 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import LandingOverlay from "./components/LandingOverlay";
+import Projects from "./components/Projects";
+import Hero from "./components/Hero";
 
 export default function Home() {
-  const [showLanding, setShowLanding] = useState(true);
+  const [overlayFinished, setOverlayFinished] = useState(false);
 
-  const handleLandingFinished = () => {
-    setShowLanding(false);
+  const handleOverlayFinish = () => {
+    setOverlayFinished(true);
   };
 
   return (
     <div className="relative">
-      {showLanding && <LandingOverlay onFinished={handleLandingFinished} />}
-      <main className={`min-h-screen ${showLanding ? "hidden" : "block"}`}>
+      {!overlayFinished && <LandingOverlay onFinished={handleOverlayFinish} />}
+      <main
+        className={`min-h-screen ${
+          overlayFinished ? "block" : "hidden"
+        } relative flex justify-center items-center flex-col overflow-hidden mx-auto sm:px-10 px-2`}
+      >
         {/* Your main portfolio content goes here */}
-        <h1>Hello, world!</h1>
-        {/* Add more static content such as your name, photo, projects, contact info, etc. */}
+        <div className="max-w-7xl w-full">
+          <Hero overlayFinished={overlayFinished} />
+          <Projects />
+        </div>
       </main>
     </div>
   );
