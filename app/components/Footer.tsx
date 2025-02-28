@@ -9,10 +9,11 @@ const Footer = () => {
     <footer className="w-full pt-20 pb-10 relative" id="contact">
       {/* background grid */}
       <div className="w-full h-full top-0 absolute left-0 -bottom-72 min-h-96">
-        <img
+        <Image
           src="/footer-grid.svg"
           alt="grid"
-          className="w-full h-full opacity-80 "
+          layout="fill"
+          className="w-full h-full opacity-80"
         />
       </div>
       <div className="flex flex-col items-center">
@@ -21,7 +22,7 @@ const Footer = () => {
           worldwide impact with technology.
         </h1>
         <p className="text-white-200 md:mt-10 my-5 text-center">
-          Let's connect and explore how I can contribute to your team.
+          Let&apos;s connect and explore how I can contribute to your team.
         </p>
         <a href="mailto:samuelpertov@gmail.com">
           <MagicButton
