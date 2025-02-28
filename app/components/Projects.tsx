@@ -7,11 +7,11 @@ import Image from "next/image";
 
 const Projects = () => {
   return (
-    <div className="py-20">
+    <div className="py-20" id="projects">
       <h1 className="heading">
-        Most{" "}
+        Most Recent{" "}
         <span className="bg-gradient-to-r from-[#FF0800] via-[#FF751B] to-[#FFE111] bg-clip-text text-transparent">
-          Recent Projects
+          Projects
         </span>
       </h1>
       <div className="flex flex-wrap items-center justify-center p-4 gap-x-24 gap-y-8 mt-10">

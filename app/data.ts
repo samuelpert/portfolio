@@ -1,3 +1,9 @@
+export const navItems = [
+  { name: "Projects", link: "#projects" },
+  { name: "Contact", link: "#contact" },
+];
+
+
 export const projects = [
   {
     id: 1,
@@ -12,7 +18,7 @@ export const projects = [
     title: "Personal Portfolio",
     img: "/p2.png",
     des: "Space themed portfolio that simulates singularity entry inside a Blackhole.",
-    iconLists: ["/ts.svg", "/re.svg", "/next.svg", "/three.svg"],
+    iconLists: ["/ts.svg", "/re.svg", "/next.svg", "/three.svg", "/ace.svg"],
     link: "/samuelpt.dev"
   },
   {
@@ -33,3 +39,21 @@ export const projects = [
   },
   
 ]; 
+
+export const socialMedia = [
+  {
+    id: 1,
+    img: "/git.svg",
+    link: "https://github.com/samuelpert"
+  },
+  {
+    id: 2,
+    img: "/x.svg",
+    link:"https://x.com/samuel_pereztov"
+  },
+  {
+    id: 3,
+    img: "/link.svg",
+    link:"https://www.linkedin.com/in/samuel-perez-tovar/"
+  },
+];
