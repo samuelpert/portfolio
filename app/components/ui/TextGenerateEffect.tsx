@@ -6,25 +6,29 @@ import { cn } from "@/app/lib/utils";
 export const TextGenerateEffect = ({
   words,
   className,
+  startAnimation,
 }: {
   words: string;
   className?: string;
+  startAnimation: boolean;
 }) => {
   const [scope, animate] = useAnimate();
   let wordsArray = words.split(" ");
+
   useEffect(() => {
-    console.log(wordsArray);
-    animate(
-      "span",
-      {
-        opacity: 1,
-      },
-      {
-        duration: 2,
-        delay: stagger(0.2),
-      }
-    );
-  }, [scope.current]);
+    if (startAnimation) {
+      animate(
+        "span",
+        {
+          opacity: 1,
+        },
+        {
+          duration: 2,
+          delay: stagger(0.2),
+        }
+      );
+    }
+  }, [startAnimation]);
 
   const renderWords = () => {
     return (

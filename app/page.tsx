@@ -7,9 +7,11 @@ import Hero from "./components/Hero";
 
 export default function Home() {
   const [overlayFinished, setOverlayFinished] = useState(false);
+  const [startAnimation, setStartAnimation] = useState(false);
 
   const handleOverlayFinish = () => {
     setOverlayFinished(true);
+    setStartAnimation(true);
   };
 
   return (
@@ -22,7 +24,7 @@ export default function Home() {
       >
         {/* Your main portfolio content goes here */}
         <div className="max-w-7xl w-full">
-          <Hero />
+          <Hero startAnimation={startAnimation} />
           <Projects />
         </div>
       </main>

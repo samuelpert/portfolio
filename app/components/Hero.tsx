@@ -5,14 +5,9 @@ import MagicButton from "@/app/components/MagicButton";
 import { TextGenerateEffect } from "./ui/TextGenerateEffect";
 import { Spotlight } from "./ui/SpotLight";
 
-const Hero = () => {
+const Hero = ({ startAnimation }: { startAnimation: boolean }) => {
   return (
     <div className="pb-20 pt-36">
-      {/**
-       *  UI: grid
-       *  change bg color to bg-black-100 and reduce grid color from
-       *  0.2 to 0.03
-       */}
       <div>
         <Spotlight
           className="-top-40 -left-10 md:-left-32 md:-top-20 h-screen"
@@ -26,7 +21,7 @@ const Hero = () => {
       </div>
 
       <div
-        className="h-screen w-full bg-black bg-grid-white/[0.05] flex items-center justify-center mix-blend-screen absolute top-0 left-0"
+        className="h-screen w-full bg-black bg-grid-white/[0.05] flex items-center justify-center absolute top-0 left-0 mix-blend-screen"
         style={{ transform: "translateZ(0)" }}
       >
         {/* Radial gradient for the container to give a faded look */}
@@ -47,6 +42,7 @@ const Hero = () => {
           <TextGenerateEffect
             words="Welcome to my space themed Portfolio!"
             className="text-center text-[40px] md:text-5xl lg:text-6xl"
+            startAnimation={startAnimation}
           />
 
           <p className="text-center md:tracking-wider mb-4 text-sm md:text-lg lg:text-2xl">
