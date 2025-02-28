@@ -22,7 +22,7 @@ export default function Home() {
       >
         {/* Your main portfolio content goes here */}
         <div className="max-w-7xl w-full">
-          <Hero overlayFinished={overlayFinished} />
+          <Hero />
           <Projects />
         </div>
       </main>

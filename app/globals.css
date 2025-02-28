@@ -2,22 +2,31 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
+@layer base {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --radius: 0.5rem;
+  }
+
+  /* Set default background color for dark mode */
+  body {
+    background-color: #000000; /* Dark background color */
+    color: white; /* Optional: Set text color to white for better contrast */
+  }
+
+  /* Ensure dark mode styles are applied */
+  .dark {
+    background-color: #000000; /* Dark background color */
+    color: white; /* Text color for dark mode */
   }
 }
 
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+@layer base {
+  * {
+    @apply !scroll-smooth;
+  }
+  button {
+    @apply active:outline-none;
+  }
 }
 
 @layer utilities {

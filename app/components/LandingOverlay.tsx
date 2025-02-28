@@ -62,7 +62,7 @@ export default function LandingOverlay({ onFinished }: LandingOverlayProps) {
       {phase === "initial" && (
         // Wrap the InitialPage in a div that conditionally applies a zoom animation.
         <div
-          className={`transition-transform duration-[2000ms] origin-[50%_30%] ${
+          className={`transition-transform duration-1000 origin-[50%_30%] ${
             zooming ? "scale-[100]" : "scale-100"
           }`}
         >

@@ -23,7 +23,7 @@ const InitialPage: React.FC<InitialPageProps> = ({ handleInitialClick }) => {
       </video>
       <p className="text-white text-center text-1xl sm:text-1xl md:text-2xl lg:text-3xl mt-4 blink-animation font-bold mb-40">
         [
-        <span className="bg-gradient-to-r from-red-500 via-red-400 to-yellow-500 bg-clip-text text-transparent">
+        <span className="bg-gradient-to-r from-[#FF0800] via-[#FF751B] to-[#FFE135] bg-clip-text text-transparent">
           Click
         </span>{" "}
         Inside The Blackhole]
