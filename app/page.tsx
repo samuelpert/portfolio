@@ -22,7 +22,6 @@ export default function Home() {
           overlayFinished ? "block" : "hidden"
         } relative flex justify-center items-center flex-col overflow-hidden mx-auto sm:px-10 px-2`}
       >
-        {/* Your main portfolio content goes here */}
         <div className="max-w-7xl w-full">
           <Hero startAnimation={startAnimation} />
           <Projects />

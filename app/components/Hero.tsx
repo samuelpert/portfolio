@@ -21,7 +21,7 @@ const Hero = ({ startAnimation }: { startAnimation: boolean }) => {
       </div>
 
       <div
-        className="h-screen w-full bg-black bg-grid-white/[0.05] flex items-center justify-center absolute top-0 left-0 mix-blend-screen"
+        className="h-screen w-full bg-black bg-grid-white/[0.06] flex items-center justify-center absolute top-0 left-0 mix-blend-screen"
         style={{ transform: "translateZ(0)" }}
       >
         {/* Radial gradient for the container to give a faded look */}

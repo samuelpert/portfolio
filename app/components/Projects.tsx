@@ -3,6 +3,7 @@
 import { FaLocationArrow } from "react-icons/fa6";
 import { projects } from "@/app/data";
 import { PinContainer } from "@/app/components/ui/PinContainer";
+import Image from "next/image";
 
 const Projects = () => {
   return (
@@ -25,9 +26,21 @@ const Projects = () => {
                   className="relative w-full h-full overflow-hidden lg:rounded-3xl"
                   style={{ backgroundColor: "#13162D" }}
                 >
-                  <img src="/bg.png" alt="bgimg" />
+                  <Image
+                    src="/bg.png"
+                    alt="bgimg"
+                    layout="fill"
+                    objectFit="cover"
+                    className="rounded-3xl"
+                  />
                 </div>
-                <img src={img} alt={title} className="z-10 absolute bottom-0" />
+                <Image
+                  src={img}
+                  alt={title}
+                  className="z-10 absolute bottom-0 rounded-3xl"
+                  layout="fill"
+                  objectFit="cover"
+                />
               </div>
 
               <h1 className="font-bold lg:text-2xl md:text-xl text-base line-clamp-1">
@@ -54,7 +67,13 @@ const Projects = () => {
                         transform: `translateX(-${5 * index + 2}px)`,
                       }}
                     >
-                      <img src={icon} alt={icon} className="p-2" />
+                      <Image
+                        src={icon}
+                        alt={icon}
+                        className="p-2 rounded-full"
+                        layout="fill"
+                        objectFit="contain"
+                      />
                     </div>
                   ))}
                 </div>

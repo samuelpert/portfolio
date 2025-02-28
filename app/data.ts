@@ -2,7 +2,7 @@ export const projects = [
   {
     id: 1,
     title: "Sign Language Recognizer Glove",
-    img: "/p1.avif",
+    img: "/p1.png",
     des: "We are creating an embedded Sign Language Recognizer Glove that uses flex sensors to track finger movements and translate them into text displayed on a screen.",
     iconLists: ["/py.svg", "/pytorch.svg"],
     link: "in_progress..."
