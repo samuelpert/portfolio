@@ -40,19 +40,19 @@ const Hero = ({ startAnimation }: { startAnimation: boolean }) => {
            *  change md:text-6xl, add more responsive code
            */}
           <TextGenerateEffect
-            words="Welcome to my space themed Portfolio!"
+            words="Welcome to my space themed portfolio!"
             className="text-center text-[40px] md:text-5xl lg:text-6xl"
             startAnimation={startAnimation}
           />
 
           <p className="text-center md:tracking-wider mb-4 text-sm md:text-lg lg:text-2xl">
-            Hi! I&apos;m Samuel, a prospect Software Engineer in his Sophomore
-            year.
+            Hi! I&apos;m Samuel, an aspiring Software Engineer and a Sophomore
+            pursuing Computer Science at Florida International University.
           </p>
 
           <a href="#projects">
             <MagicButton
-              title="Show my work"
+              title="Look at my work"
               icon={<FaLocationArrow />}
               position="right"
             />
