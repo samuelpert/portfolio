@@ -23,7 +23,7 @@ export default function Home() {
       <main
         className={`min-h-screen ${
           overlayFinished ? "block" : "hidden"
-        } relative flex justify-center items-center flex-col mx-auto sm:px-10 px-2`}
+        } relative flex justify-center items-center flex-col mx-auto sm:px-10 px-2 overflow-clip`}
       >
         <div className="max-w-7xl w-full">
           <Navbar navItems={navItems} />
