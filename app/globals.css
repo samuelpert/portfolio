@@ -34,3 +34,21 @@
     @apply font-bold text-4xl md:text-5xl text-center;
   }
 }
+
+.animate-spotlight {
+  animation: spotlight-animation 1s forwards; /* Adjust duration and timing */
+}
+
+@keyframes spotlight-animation {
+  0% {
+    transform: scale(0.5); /* Start smaller */
+    opacity: 0; /* Start invisible */
+  }
+  50% {
+    opacity: 0.5; /* Fade in */
+  }
+  100% {
+    transform: scale(1); /* End at full size */
+    opacity: 1; /* Fully visible */
+  }
+}
