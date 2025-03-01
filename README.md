@@ -30,6 +30,19 @@ A space-themed personal portfolio website that simulates entering the singularit
 - **Maath**: Math utilities for Three.js applications
 - **Aceternity UI**: Custom UI components
 
+## 🌌 Inspiration
+
+This project is inspired by the movie **Interstellar**. As a huge fan of Christopher Nolan's movie, I aimed to represent **Gargantua's black hole** in my portfolio.
+
+## 📷 Credits
+
+- **Image**:
+
+  - Black hole: NASA’s Goddard Space Flight Center/Jeremy Schnittman
+
+- **Video**:
+  - Black Hole Visualization: NASA's Goddard Space Flight Center/J. Schnittman and B. Powell
+
 ## 🛠️ Installation & Setup
 
 1. Clone the repository
