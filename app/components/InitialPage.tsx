@@ -1,6 +1,7 @@
 import React from "react";
-import { FaLinkedin, FaGithub } from "react-icons/fa";
 import { StarsCanvas } from "@/app/components/StarBackground";
+import { socialMedia } from "../data";
+import Image from "next/image";
 
 interface InitialPageProps {
   handleInitialClick: () => void;
@@ -21,13 +22,18 @@ const InitialPage: React.FC<InitialPageProps> = ({ handleInitialClick }) => {
       >
         <source src="/videos/blackhole.webm" type="video/webm" />
       </video>
-      <p className="text-white text-center text-1xl sm:text-1xl md:text-2xl lg:text-3xl mt-4 blink-animation font-bold mb-40">
-        [
-        <span className="bg-gradient-to-r from-[#FF0800] via-[#FF751B] to-[#FFE135] bg-clip-text text-transparent">
-          Click
-        </span>{" "}
-        Inside The Blackhole]
-      </p>
+      <div className="text-center">
+        <p className="text-white text-2xl sm:text-2xl md:text-2xl lg:text-3xl mt-4 blink-animation font-bold mb-4">
+          [
+          <span className="bg-gradient-to-r from-[#FF0800] via-[#FF751B] to-[#FFE135] bg-clip-text text-transparent">
+            Click
+          </span>{" "}
+          Inside The Blackhole]
+        </p>
+        <p className="text-white text-m sm:text-base md:text-lg lg:text-xl mt-4 font-bold blink-animation mb-40">
+          to explore Samuel&apos;s portfolio.
+        </p>
+      </div>
       <style jsx>{`
         @keyframes blink {
           0%,
@@ -42,29 +48,18 @@ const InitialPage: React.FC<InitialPageProps> = ({ handleInitialClick }) => {
           animation: blink 2.5s infinite;
         }
       `}</style>
-      <div className="absolute bottom-[2%] flex space-x-4 mb-5">
-        <a
-          href="https://www.linkedin.com/in/samuel-perez-tovar"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center space-x-2"
-        >
-          <FaLinkedin
-            size={40}
-            className="text-gray-600 hover:text-gray-400 transition-colors duration-200"
-          />
-        </a>
-        <a
-          href="https://github.com/samuelpert"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center space-x-2"
-        >
-          <FaGithub
-            size={40}
-            className="text-gray-600 hover:text-gray-400 transition-colors duration-200"
-          />
-        </a>
+      <div className="absolute bottom-[3%] flex space-x-4 mb-5">
+        {socialMedia.map((info) => (
+          <a
+            key={info.id}
+            href={info.link}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-10 h-10 cursor-pointer flex justify-center items-center backdrop-filter backdrop-blur-lg saturate-180 bg-opacity-75 bg-black-200 rounded-lg border border-black-300 z-10 opacity-50 hover:opacity-75"
+          >
+            <Image src={info.img} alt="icons" width={20} height={20} />
+          </a>
+        ))}
       </div>
     </div>
   );
