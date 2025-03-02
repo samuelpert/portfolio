@@ -10,21 +10,12 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "Samuel's Portfolio",
   description: "Enjoy my space themed portfolio!",
-  openGraph: {
-    title: "Samuel's Portfolio",
-    description: "Enjoy my space themed portfolio!",
-    url: "https://samuelpt.dev", // Replace with your actual URL
-    images: [
-      {
-        url: "/p2.png", // Corrected image URL
-        width: 800,
-        height: 600,
-        alt: "A description of the image",
-      },
-    ],
-  },
   icons: {
-    icon: "/favicon.ico", // Corrected favicon link
+    icon: [
+      { url: "/favicon.ico", type: "image/x-icon" }, // Fallback for Safari
+      { url: "/favicon-96x96.png", sizes: "96x96", type: "image/png" }, // Standard favicon
+    ],
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180" }],
   },
 };
 
@@ -36,8 +27,21 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <link rel="icon" href="/favicon.ico" />
+        <link
+          rel="icon"
+          type="image/png"
+          href="/favicon-96x96.png"
+          sizes="96x96"
+        />
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+        <link rel="shortcut icon" href="/favicon.ico" />
+        <link
+          rel="apple-touch-icon"
+          sizes="180x180"
+          href="/apple-touch-icon.png"
+        />
       </head>
+
       <body className={`${inter.className}`}>
         <StarsCanvas />
 
