@@ -38,7 +38,7 @@ const Hero = ({ startAnimation }: { startAnimation: boolean }) => {
         <div className="max-w-[89vw] md:max-w-2xl lg:max-w-[60vw] flex flex-col items-center justify-center">
           <div>
             <img
-              src="/me2.png" // Replace with the actual path to your image
+              src="/me.png" // Replace with the actual path to your image
               alt="Samuel"
               className="rounded-full border-2 border-[#FF751B] w-32 h-32 mb-4" // Adjust size as needed
             />
