@@ -36,6 +36,14 @@ const Hero = ({ startAnimation }: { startAnimation: boolean }) => {
 
       <div className="flex justify-center relative my-20 z-10">
         <div className="max-w-[89vw] md:max-w-2xl lg:max-w-[60vw] flex flex-col items-center justify-center">
+          <div>
+            <img
+              src="/me2.png" // Replace with the actual path to your image
+              alt="Samuel"
+              className="rounded-full border-2 border-[#FF751B] w-32 h-32 mb-4" // Adjust size as needed
+            />
+          </div>
+
           <p className="uppercase tracking-widest text-xs text-center text-orange-100 max-w-80">
             You Have Entered The Singularity!
           </p>
@@ -46,14 +54,15 @@ const Hero = ({ startAnimation }: { startAnimation: boolean }) => {
            *  change md:text-6xl, add more responsive code
            */}
           <TextGenerateEffect
-            words="Welcome to my space themed portfolio."
+            words="Hi! I'm Samuel. Emerging Software Engineer."
             className="text-center text-[40px] md:text-5xl lg:text-6xl"
             startAnimation={startAnimation}
           />
 
           <p className="text-center md:tracking-wider mb-4 text-sm md:text-lg lg:text-2xl">
-            Hi! I&apos;m Samuel, an aspiring Software Engineer and a Sophomore
-            pursuing Computer Science at Florida International University.
+            I&apos;m a Sophomore majoring Computer Science at Florida
+            International University. Interested on ML development and
+            applications with potential impact.
           </p>
 
           <a href="#projects">
