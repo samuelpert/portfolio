@@ -33,7 +33,7 @@ export const projects = [
     id: 4,
     title: "Stock Market Simulator",
     img: "/p4.webp",
-    des: "A full-stack stocksimulator where users can create an account to buy, sell, quote stocks and view their transaction history. This project was part of an academic course.",
+    des: "A full-stack stock simulator where users can create an account to buy, sell, quote stocks and view their transaction history. This project was part of an academic course.",
     iconLists: ["/fl.svg", "/sql.svg"],
     link: "https://game-hub-kappa-gray.vercel.app/"
   }
