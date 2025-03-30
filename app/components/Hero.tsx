@@ -60,9 +60,9 @@ const Hero = ({ startAnimation }: { startAnimation: boolean }) => {
           />
 
           <p className="text-center md:tracking-wider mb-4 text-sm md:text-lg lg:text-2xl">
-            I&apos;m a Sophomore majoring Computer Science at Florida
-            International University. Interested on ML development and
-            applications with potential impact.
+            I&apos;m a sophomore computer science undergrad at Florida
+            International University. Interested on machine learning development
+            and web apps.
           </p>
 
           <a href="#projects">

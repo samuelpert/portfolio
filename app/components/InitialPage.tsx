@@ -28,7 +28,7 @@ const InitialPage: React.FC<InitialPageProps> = ({ handleInitialClick }) => {
           <span className="bg-gradient-to-r from-[#FF0800] via-[#FF751B] to-[#FFE135] bg-clip-text text-transparent">
             Click
           </span>{" "}
-          Inside The Blackhole]
+          On The Black Hole]
         </p>
         <p className="text-white text-m sm:text-base md:text-lg lg:text-xl mt-4 font-bold blink-animation mb-40">
           to explore Samuel&apos;s portfolio.
