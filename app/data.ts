@@ -24,11 +24,19 @@ export const projects = [
   {
     id: 3,
     title: "Game Hub v1",
-    img: "/p4.webp",
+    img: "/p3.webp",
     des: "Designed a React-based application for exploring 350,000+ video games via an API with detailed insights, ratings, and platform availability.",
     iconLists: ["/ts.svg", "/re.svg", "/vite.svg", "/chakra.svg"],
     link: "https://game-hub-kappa-gray.vercel.app/"
   },
+  {
+    id: 4,
+    title: "Stock Market Simulator",
+    img: "/p4.webp",
+    des: "A full-stack stocksimulator where users can create an account to buy, sell, quote stocks and view their transaction history. This project was part of an academic course.",
+    iconLists: ["/fl.svg", "/sql.svg"],
+    link: "https://game-hub-kappa-gray.vercel.app/"
+  }
   
 ]; 
 
@@ -41,7 +49,7 @@ export const socialMedia = [
   {
     id: 2,
     img: "/x.svg",
-    link:"https://x.com/samuel_pereztov"
+    link:"https://x.com/samuelpertov"
   },
   {
     id: 3,
