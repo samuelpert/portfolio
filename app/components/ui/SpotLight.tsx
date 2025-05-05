@@ -1,3 +1,4 @@
+// Optimized SpotLight.tsx
 import { cn } from "@/app/lib/utils";
 import React from "react";
 
@@ -5,24 +6,34 @@ type SpotlightProps = {
   className?: string;
   fill?: string;
   startAnimation: boolean;
+  reducedMotion?: boolean;
 };
 
 export const Spotlight = ({
   className,
   fill,
   startAnimation,
+  reducedMotion = false,
 }: SpotlightProps) => {
+  // If reducedMotion is true, we still render the spotlight but without the animation
+  const shouldAnimate = startAnimation && !reducedMotion;
+
   return (
     <svg
-      key={startAnimation ? "animating" : "static"}
+      key={shouldAnimate ? "animating" : "static"}
       className={cn(
         "pointer-events-none absolute z-[1] h-[169%] w-[138%] lg:w-[84%] opacity-100",
-        startAnimation ? "animate-spotlight" : "",
+        shouldAnimate ? "animate-spotlight" : "",
         className
       )}
       xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 3787 2842"
       fill="none"
+      style={{
+        willChange: shouldAnimate ? "transform, opacity" : "auto",
+        // Use hardware acceleration for animations
+        transform: shouldAnimate ? "translateZ(0)" : "none",
+      }}
     >
       <g filter="url(#filter)">
         <ellipse

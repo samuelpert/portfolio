@@ -1,3 +1,4 @@
+// Optimized TextGenerateEffect.tsx
 "use client";
 import { useEffect } from "react";
 import { motion, stagger, useAnimate } from "framer-motion";
@@ -7,16 +8,18 @@ export const TextGenerateEffect = ({
   words,
   className,
   startAnimation,
+  reducedMotion = false,
 }: {
   words: string;
   className?: string;
   startAnimation: boolean;
+  reducedMotion?: boolean;
 }) => {
   const [scope, animate] = useAnimate();
   const wordsArray = words.split(" ");
 
   useEffect(() => {
-    if (startAnimation) {
+    if (startAnimation && !reducedMotion) {
       animate(
         "span",
         {
@@ -25,10 +28,18 @@ export const TextGenerateEffect = ({
         {
           duration: 2,
           delay: stagger(0.2),
+          ease: "easeInOut", // Smoother animation
         }
       );
+    } else if (startAnimation && reducedMotion) {
+      // If reduced motion, just make all words visible immediately
+      animate(
+        "span",
+        { opacity: 1 },
+        { duration: 0.1 } // Very quick transition
+      );
     }
-  }, [startAnimation, animate, wordsArray]);
+  }, [startAnimation, animate, reducedMotion]);
 
   const renderWords = () => {
     return (
@@ -37,12 +48,16 @@ export const TextGenerateEffect = ({
           return (
             <motion.span
               key={word + idx}
-              // change here if idx is greater than 3, change the text color to #CBACF9
               className={` ${
                 idx > 4
                   ? "bg-gradient-to-r from-[#FF0800] via-[#FF751B] to-[#FFE111] bg-clip-text text-transparent"
                   : "text-white"
               } opacity-0`}
+              style={{
+                // Add will-change only during animation
+                willChange:
+                  !reducedMotion && startAnimation ? "opacity" : "auto",
+              }}
             >
               {word}{" "}
             </motion.span>
@@ -54,10 +69,8 @@ export const TextGenerateEffect = ({
 
   return (
     <div className={cn("font-bold", className)}>
-      {/* mt-4 to my-4 */}
       <div className="my-4">
-        {/* remove  text-2xl from the original */}
-        <div className=" dark:text-white text-black leading-snug tracking-wide">
+        <div className="dark:text-white text-black leading-snug tracking-wide">
           {renderWords()}
         </div>
       </div>
