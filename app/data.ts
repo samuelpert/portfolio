@@ -9,8 +9,8 @@ export const projects = [
     id: 1,
     title: "Sign Language Recognizer Glove",
     img: "/p1.webp",
-    des: "We built a sign language recognizer glove. As a part of the AI team we worked on gesture recognition to increase the glove's precision using a custom dataset with Rainforest AI and recorded glove movements with a Python script.", 
-    iconLists: ["/py.svg", "/pytorch.svg"],
+    des: "A sign language recognizer glove. As a part of the AI team I worked on gesture recognition to increase the glove's precision using a custom dataset with Random Forest AI and recorded glove movements with a Python script.", 
+    iconLists: ["/py.svg", "/randomforest.png"],
     link: "https://github.com/ashleyprado/sign-language-ai"
   },
   {
