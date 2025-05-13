@@ -1,5 +1,5 @@
 "use client";
-
+import { trackBlackHoleComplete } from "./GoogleAnalytics";
 import React, { useState, useEffect } from "react";
 import InitialPage from "./InitialPage";
 
@@ -19,11 +19,13 @@ export default function LandingOverlay({ onFinished }: LandingOverlayProps) {
   // "videoFadeIn" triggers the video fade in.
   const [videoFadeIn, setVideoFadeIn] = useState(false);
 
+  const [animationStartTime, setAnimationStartTime] = useState<number>(0);
+
   // When the initial element is clicked the zoom animation is set to true.
   const handleInitialClick = () => {
     if (!zooming) {
       setZooming(true);
-      // Wait for the zoom animation to finish before switching phases.
+      setAnimationStartTime(Date.now());
       setTimeout(() => {
         setPhase("transition");
         setZooming(false);
@@ -35,6 +37,12 @@ export default function LandingOverlay({ onFinished }: LandingOverlayProps) {
   const triggerFadeOut = () => {
     if (!fadeOut) {
       setFadeOut(true);
+
+      if (animationStartTime) {
+        const duration = Date.now() - animationStartTime;
+        trackBlackHoleComplete(duration);
+      }
+
       setTimeout(() => {
         onFinished();
       }, 1000);

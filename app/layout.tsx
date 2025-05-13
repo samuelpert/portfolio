@@ -1,6 +1,8 @@
+// app/layout.tsx
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { StarsCanvas } from "@/app/components/StarBackground";
+import GoogleAnalytics from "@/app/components/GoogleAnalytics";
 import "./globals.css";
 
 const inter = Inter({
@@ -13,8 +15,8 @@ export const metadata: Metadata = {
     "Welcome to my portfolio inconveniently located in the singularity of Gargantua's black hole!",
   icons: {
     icon: [
-      { url: "/myfavicon.ico", type: "image/x-icon" }, // Fallback for Safari
-      { url: "/favicon-96x96.png", sizes: "96x96", type: "image/png" }, // Standard favicon
+      { url: "/myfavicon.ico", type: "image/x-icon" },
+      { url: "/favicon-96x96.png", sizes: "96x96", type: "image/png" },
     ],
     apple: [{ url: "/apple-touch-icon.png", sizes: "180x180" }],
   },
@@ -45,6 +47,8 @@ export default function RootLayout({
       <body className={`${inter.className}`}>
         <StarsCanvas />
         {children}
+        {/* Only load analytics in production */}
+        {process.env.NODE_ENV === "production" && <GoogleAnalytics />}
       </body>
     </html>
   );

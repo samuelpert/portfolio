@@ -1,3 +1,5 @@
+"use client";
+import { trackContactClick, trackSocialClick } from "./GoogleAnalytics";
 import { FaLocationArrow } from "react-icons/fa6";
 import { socialMedia } from "@/app/data";
 import MagicButton from "./MagicButton";
@@ -24,7 +26,10 @@ const Footer = () => {
         <p className="text-white-200 md:mt-10 my-5 text-center">
           Let&apos;s connect and explore how I can contribute to your team.
         </p>
-        <a href="mailto:samuelpertov@gmail.com">
+        <a
+          href="mailto:samuelpertov@gmail.com"
+          onClick={() => trackContactClick("email")}
+        >
           <MagicButton
             title="Contact Me"
             icon={<FaLocationArrow />}
@@ -45,6 +50,16 @@ const Footer = () => {
               target="_blank"
               rel="noopener noreferrer"
               className="w-10 h-10 cursor-pointer flex justify-center items-center backdrop-filter backdrop-blur-lg saturate-180 bg-opacity-75 bg-black-200 rounded-lg border border-black-300 z-10"
+              onClick={() => {
+                const platform = info.link.includes("github")
+                  ? "github"
+                  : info.link.includes("linkedin")
+                  ? "linkedin"
+                  : info.link.includes("x.com")
+                  ? "twitter"
+                  : "unknown";
+                trackSocialClick(platform);
+              }}
             >
               <Image src={info.img} alt="icons" width={20} height={20} />
             </a>

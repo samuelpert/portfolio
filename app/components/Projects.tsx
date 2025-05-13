@@ -1,5 +1,5 @@
 "use client";
-
+import { trackProjectView } from "./GoogleAnalytics";
 import { FaLocationArrow } from "react-icons/fa6";
 import { projects } from "@/app/data";
 import { PinContainer } from "@/app/components/ui/PinContainer";
@@ -19,6 +19,7 @@ const Projects = () => {
           <div
             className="sm:h-[41rem] h-[32rem] lg:min-h-[32.5rem] flex items-center justify-center sm:w-[570px] w-[80vw]"
             key={id}
+            onClick={() => trackProjectView(title)}
           >
             <PinContainer title={link} href={link}>
               <div className="relative flex items-center justify-center sm:w-[570px] w-[80vw] overflow-hidden sm:h-[40vh] h-[30vh] mb-10">
