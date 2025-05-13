@@ -11,7 +11,20 @@ type GtagEvent = {
   category: string;
   label?: string;
   value?: number;
-  [key: string]: any;
+  [key: string]: string | number | boolean | undefined;
+};
+
+// Types for gtag configuration
+type GtagConfig = {
+  page_path?: string;
+  event_category?: string;
+  event_label?: string;
+  value?: number;
+  send_page_view?: boolean;
+  anonymize_ip?: boolean;
+  cookie_flags?: string;
+  link_attribution?: boolean;
+  [key: string]: string | number | boolean | undefined;
 };
 
 // Extend the Window interface
@@ -20,9 +33,9 @@ declare global {
     gtag: (
       command: "config" | "event" | "js" | "set",
       targetId: string | Date,
-      config?: any
+      config?: GtagConfig
     ) => void;
-    dataLayer: any[];
+    dataLayer: Array<unknown>;
   }
 }
 
