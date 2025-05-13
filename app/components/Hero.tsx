@@ -7,7 +7,7 @@ import { Spotlight } from "./ui/SpotLight";
 
 const Hero = ({ startAnimation }: { startAnimation: boolean }) => {
   return (
-    <div className="pb-20 pt-36">
+    <div className="pb-20 pt-20">
       <div>
         <Spotlight
           className="-top-40 -left-10 md:-left-32 md:-top-20 h-screen"
@@ -38,21 +38,16 @@ const Hero = ({ startAnimation }: { startAnimation: boolean }) => {
             You Have Entered The Singularity!
           </p>
 
-          {/**
-           *  Link: https://ui.aceternity.com/components/text-generate-effect
-           *
-           *  change md:text-6xl, add more responsive code
-           */}
           <TextGenerateEffect
-            words="Hi! I'm Samuel. Emerging Software Engineer."
-            className="text-center text-[40px] md:text-5xl lg:text-6xl"
+            words="Welcome! I'm Samuel. Emerging Software Engineer."
+            className="text-center text-[40px] md:text-5xl lg:text-6xl mb-6"
             startAnimation={startAnimation}
           />
 
-          <p className="text-center md:tracking-wider mb-4 text-sm md:text-lg lg:text-2xl">
-            I&apos;m a sophomore computer science undergrad at Florida
-            International University. Interested on machine learning development
-            and web apps.
+          <p className="text-center md:tracking-wider mb-6 text-sm md:text-lg lg:text-2xl">
+            I am a Sophomore Computer Science Undergrad at Florida International
+            University (FIU). Interested in machine learning development and web
+            applications.
           </p>
 
           <a href="#projects">
