@@ -37,9 +37,10 @@ const Projects = () => {
                 <Image
                   src={img}
                   alt={title}
-                  className="z-10 absolute bottom-0 rounded-3xl"
+                  className="z-10 absolute rounded-3xl"
                   layout="fill"
                   objectFit="cover"
+                  objectPosition="center"
                 />
               </div>
 

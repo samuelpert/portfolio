@@ -9,7 +9,7 @@ export const projects = [
     id: 1,
     title: "Sign Language Recognizer Glove",
     img: "/p1.webp",
-    des: "We are building a sign language recognizer glove. I am on the AI team working on gesture recognition to increase the glove's precision. [In Progress]",
+    des: "We built a sign language recognizer glove. As a part of the AI team we worked on gesture recognition to increase the glove's precision using a custom dataset with Rainforest AI and recorded glove movements with a Python script.", 
     iconLists: ["/py.svg", "/pytorch.svg"],
     link: "https://github.com/ashleyprado/sign-language-ai"
   },
