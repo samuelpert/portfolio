@@ -3,7 +3,7 @@
 import { Points, PointMaterial } from "@react-three/drei";
 import { Canvas, useFrame } from "@react-three/fiber";
 import * as random from "maath/random";
-import { useState, useRef, Suspense, useMemo } from "react";
+import { useRef, Suspense, useMemo } from "react";
 import type { Points as PointsType } from "three";
 import { PointsInstancesProps } from "@react-three/drei";
 
