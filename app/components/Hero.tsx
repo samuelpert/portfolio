@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { FaLocationArrow } from "react-icons/fa6";
 
 import MagicButton from "@/app/components/MagicButton";
@@ -6,6 +6,17 @@ import { TextGenerateEffect } from "./ui/TextGenerateEffect";
 import { Spotlight } from "./ui/SpotLight";
 
 const Hero = ({ startAnimation }: { startAnimation: boolean }) => {
+  const [shouldAnimate, setShouldAnimate] = useState(false);
+
+  useEffect(() => {
+    // On mobile (< 768px), start animation immediately
+    // On desktop, wait for startAnimation prop
+    const isMobile = window.innerWidth < 768;
+    if (isMobile || startAnimation) {
+      setShouldAnimate(true);
+    }
+  }, [startAnimation]);
+
   return (
     <div className="pb-20 pt-20">
       <div>
@@ -26,7 +37,8 @@ const Hero = ({ startAnimation }: { startAnimation: boolean }) => {
 
       <div className="flex justify-center relative my-20 z-10">
         <div className="max-w-[89vw] md:max-w-2xl lg:max-w-[60vw] flex flex-col items-center justify-center">
-          <div>
+          {/* Hide face image on mobile (below md breakpoint) */}
+          <div className="hidden md:block">
             <img
               src="/me.png" // Replace with the actual path to your image
               alt="Samuel"
@@ -35,13 +47,17 @@ const Hero = ({ startAnimation }: { startAnimation: boolean }) => {
           </div>
 
           <p className="uppercase tracking-widest text-xs text-center text-orange-100 max-w-80">
-            You Have Entered The Singularity!
+            {/* Show different text on mobile vs desktop */}
+            <span className="block md:hidden">Welcome to my portfolio!</span>
+            <span className="hidden md:block">
+              You Have Entered The Singularity!
+            </span>
           </p>
 
           <TextGenerateEffect
             words="Welcome! I'm Samuel. Emerging Software Engineer."
             className="text-center text-[40px] md:text-5xl lg:text-6xl mb-6"
-            startAnimation={startAnimation}
+            startAnimation={shouldAnimate}
           />
 
           <p className="text-center md:tracking-wider mb-6 text-sm md:text-lg lg:text-2xl">
