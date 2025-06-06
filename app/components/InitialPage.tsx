@@ -9,7 +9,7 @@ interface InitialPageProps {
 
 const InitialPage: React.FC<InitialPageProps> = ({ handleInitialClick }) => {
   return (
-    <div className="flex flex-col items-center h-screen">
+    <div className="hidden md:flex flex-col items-center h-screen">
       <StarsCanvas />
       <div className="h-[10vh]"></div>{" "}
       <video
