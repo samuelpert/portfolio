@@ -21,6 +21,24 @@ export default function LandingOverlay({ onFinished }: LandingOverlayProps) {
 
   const [animationStartTime, setAnimationStartTime] = useState<number>(0);
 
+  // Check if mobile and skip overlay entirely
+  useEffect(() => {
+    const checkMobile = () => {
+      if (window.innerWidth < 768) {
+        // md breakpoint in Tailwind
+        onFinished();
+      }
+    };
+
+    // Check on mount
+    checkMobile();
+
+    // Also check on resize in case user changes screen size
+    window.addEventListener("resize", checkMobile);
+
+    return () => window.removeEventListener("resize", checkMobile);
+  }, [onFinished]);
+
   // When the initial element is clicked the zoom animation is set to true.
   const handleInitialClick = () => {
     if (!zooming) {
