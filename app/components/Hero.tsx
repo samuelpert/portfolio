@@ -55,7 +55,7 @@ const Hero = ({ startAnimation }: { startAnimation: boolean }) => {
           </p>
 
           <TextGenerateEffect
-            words="Welcome! I'm Samuel. Emerging Software Engineer."
+            words="I'm Samuel. Emerging Software Engineer."
             className="text-center text-[40px] md:text-5xl lg:text-6xl mb-6"
             startAnimation={shouldAnimate}
           />
