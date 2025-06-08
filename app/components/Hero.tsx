@@ -60,7 +60,7 @@ const Hero = ({ startAnimation }: { startAnimation: boolean }) => {
             startAnimation={shouldAnimate}
           />
 
-          <p className="text-center md:tracking-wider mb-6 text-sm md:text-lg lg:text-2xl">
+          <p className="text-center md:tracking-wider mb-6 text-lg md:text-lg lg:text-2xl">
             I am a Sophomore Computer Science Undergrad at Florida International
             University (FIU). Interested in machine learning development and web
             applications.
