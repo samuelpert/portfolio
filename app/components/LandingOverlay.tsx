@@ -1,5 +1,10 @@
 "use client";
-import { trackBlackHoleComplete } from "./GoogleAnalytics";
+import {
+  trackBlackHoleComplete,
+  trackBlackHoleStart,
+  trackBlackHoleSkip,
+  trackBlackHoleView,
+} from "./GoogleAnalytics";
 import React, { useState, useEffect } from "react";
 import InitialPage from "./InitialPage";
 
@@ -10,55 +15,63 @@ interface LandingOverlayProps {
 type Phase = "initial" | "transition";
 
 export default function LandingOverlay({ onFinished }: LandingOverlayProps) {
-  // "phase" decides which view to display.
   const [phase, setPhase] = useState<Phase>("initial");
-  // "zooming" triggers the zoom animation when the initial video is clicked.
   const [zooming, setZooming] = useState(false);
-  // "fadeOut" triggers the fade-out transition.
   const [fadeOut, setFadeOut] = useState(false);
-  // "videoFadeIn" triggers the video fade in.
   const [videoFadeIn, setVideoFadeIn] = useState(false);
-
   const [animationStartTime, setAnimationStartTime] = useState<number>(0);
+  const [transitionStartTime, setTransitionStartTime] = useState<number>(0);
 
   // Check if mobile and skip overlay entirely
   useEffect(() => {
     const checkMobile = () => {
       if (window.innerWidth < 768) {
-        // md breakpoint in Tailwind
+        // Mobile users skip overlay entirely - no tracking needed
         onFinished();
+      } else {
+        // Desktop user sees the black hole - track this view
+        trackBlackHoleView();
       }
     };
 
-    // Check on mount
     checkMobile();
-
-    // Also check on resize in case user changes screen size
     window.addEventListener("resize", checkMobile);
-
     return () => window.removeEventListener("resize", checkMobile);
   }, [onFinished]);
 
-  // When the initial element is clicked the zoom animation is set to true.
+  // When the initial black hole is clicked - THIS IS THE KEY TRACKING!
   const handleInitialClick = () => {
     if (!zooming) {
+      // 🎯 Track that user clicked the black hole to start animation
+      trackBlackHoleStart();
+
       setZooming(true);
       setAnimationStartTime(Date.now());
+
       setTimeout(() => {
         setPhase("transition");
         setZooming(false);
+        setTransitionStartTime(Date.now());
       }, 500);
     }
   };
 
-  // Trigger fade-out when the video ends or when the user clicks button skip.
-  const triggerFadeOut = () => {
+  // Trigger fade-out (can be from skip button or natural end)
+  const triggerFadeOut = (wasSkipped: boolean = false) => {
     if (!fadeOut) {
       setFadeOut(true);
 
       if (animationStartTime) {
-        const duration = Date.now() - animationStartTime;
-        trackBlackHoleComplete(duration);
+        const totalDuration = Date.now() - animationStartTime;
+
+        if (wasSkipped && transitionStartTime) {
+          // Track skip with time before skip
+          const timeBeforeSkip = Date.now() - transitionStartTime;
+          trackBlackHoleSkip(timeBeforeSkip);
+        } else {
+          // Track natural completion
+          trackBlackHoleComplete(totalDuration);
+        }
       }
 
       setTimeout(() => {
@@ -67,12 +80,17 @@ export default function LandingOverlay({ onFinished }: LandingOverlayProps) {
     }
   };
 
-  // Handler for when the video finishes playing.
+  // Handler for when the video finishes playing naturally
   const handleTransitionEnded = () => {
-    triggerFadeOut();
+    triggerFadeOut(false); // false = not skipped, natural completion
   };
 
-  // When phase becomes "transition", trigger the video fade in.
+  // Handler for skip button
+  const handleSkipClick = () => {
+    triggerFadeOut(true); // true = user skipped
+  };
+
+  // When phase becomes "transition", trigger the video fade in
   useEffect(() => {
     if (phase === "transition") {
       setVideoFadeIn(true);
@@ -86,7 +104,6 @@ export default function LandingOverlay({ onFinished }: LandingOverlayProps) {
       }`}
     >
       {phase === "initial" && (
-        // Wrap the InitialPage in a div that conditionally applies a zoom animation.
         <div
           className={`transition-transform duration-1000 origin-[50%_30%] ${
             zooming ? "scale-[100]" : "scale-100"
@@ -107,7 +124,7 @@ export default function LandingOverlay({ onFinished }: LandingOverlayProps) {
             onEnded={handleTransitionEnded}
           />
           <button
-            onClick={triggerFadeOut}
+            onClick={handleSkipClick}
             className="absolute bottom-10 px-4 py-2 bg-transparent text-white rounded border border-white hover:border-gray-400 hover:text-gray-400 transition duration-200"
           >
             Skip

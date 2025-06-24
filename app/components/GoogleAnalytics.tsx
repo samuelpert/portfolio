@@ -68,23 +68,39 @@ export const event = ({
   }
 };
 
-// Custom event helpers for portfolio
-export const trackProjectView = (projectName: string) => {
+// ==========================================
+// BLACK HOLE ANIMATION TRACKING FUNCTIONS
+// ==========================================
+
+// Track when desktop user sees the black hole initially
+export const trackBlackHoleView = () => {
   event({
-    action: "view_project",
+    action: "blackhole_view",
     category: "engagement",
-    label: projectName,
+    label: "desktop_initial_view",
   });
 };
 
-export const trackContactClick = (method: string) => {
+// Track when user clicks the black hole to start animation (KEY METRIC!)
+export const trackBlackHoleStart = () => {
   event({
-    action: "contact_click",
+    action: "blackhole_animation_start",
     category: "engagement",
-    label: method,
+    label: "desktop_entry",
   });
 };
 
+// Track when user skips the transition animation
+export const trackBlackHoleSkip = (timeBeforeSkip: number) => {
+  event({
+    action: "blackhole_animation_skip",
+    category: "engagement",
+    label: "user_skip",
+    value: timeBeforeSkip,
+  });
+};
+
+// Track when the full black hole animation sequence completes
 export const trackBlackHoleComplete = (duration: number) => {
   event({
     action: "blackhole_animation_complete",
@@ -93,6 +109,29 @@ export const trackBlackHoleComplete = (duration: number) => {
   });
 };
 
+// ==========================================
+// OTHER PORTFOLIO EVENT TRACKING FUNCTIONS
+// ==========================================
+
+// Track project card interactions
+export const trackProjectView = (projectName: string) => {
+  event({
+    action: "view_project",
+    category: "engagement",
+    label: projectName,
+  });
+};
+
+// Track contact button clicks
+export const trackContactClick = (method: string) => {
+  event({
+    action: "contact_click",
+    category: "engagement",
+    label: method,
+  });
+};
+
+// Track social media link clicks
 export const trackSocialClick = (platform: string) => {
   event({
     action: "social_click",
@@ -101,6 +140,7 @@ export const trackSocialClick = (platform: string) => {
   });
 };
 
+// Track scroll depth milestones
 export const trackScrollDepth = (percentage: number) => {
   event({
     action: "scroll",
@@ -109,6 +149,10 @@ export const trackScrollDepth = (percentage: number) => {
     value: percentage,
   });
 };
+
+// ==========================================
+// MAIN GOOGLE ANALYTICS COMPONENT
+// ==========================================
 
 export default function GoogleAnalytics() {
   const pathname = usePathname();
@@ -121,7 +165,7 @@ export default function GoogleAnalytics() {
     }
   }, [pathname, searchParams]);
 
-  // Track scroll depth
+  // Track scroll depth automatically
   useEffect(() => {
     let maxScroll = 0;
     const trackScroll = () => {
@@ -139,6 +183,7 @@ export default function GoogleAnalytics() {
     return () => window.removeEventListener("scroll", trackScroll);
   }, []);
 
+  // Don't load analytics if no measurement ID
   if (!GA_MEASUREMENT_ID) {
     console.warn("Google Analytics Measurement ID not found");
     return null;
