@@ -21,6 +21,7 @@ export default function LandingOverlay({ onFinished }: LandingOverlayProps) {
   const [videoFadeIn, setVideoFadeIn] = useState(false);
   const [animationStartTime, setAnimationStartTime] = useState<number>(0);
   const [transitionStartTime, setTransitionStartTime] = useState<number>(0);
+  const [loopCount, setLoopCount] = useState(0);
 
   // Check if mobile and skip overlay entirely
   useEffect(() => {
@@ -56,38 +57,44 @@ export default function LandingOverlay({ onFinished }: LandingOverlayProps) {
     }
   };
 
-  // Trigger fade-out (can be from skip button or natural end)
-  const triggerFadeOut = (wasSkipped: boolean = false) => {
-    if (!fadeOut) {
-      setFadeOut(true);
-
-      if (animationStartTime) {
-        const totalDuration = Date.now() - animationStartTime;
-
-        if (wasSkipped && transitionStartTime) {
-          // Track skip with time before skip
-          const timeBeforeSkip = Date.now() - transitionStartTime;
-          trackBlackHoleSkip(timeBeforeSkip);
-        } else {
-          // Track natural completion
-          trackBlackHoleComplete(totalDuration);
-        }
-      }
-
-      setTimeout(() => {
-        onFinished();
-      }, 1000);
-    }
-  };
-
-  // Handler for when the video finishes playing naturally
+  // Handler for when the video finishes playing naturally - LOOP BACK!
   const handleTransitionEnded = () => {
-    triggerFadeOut(false); // false = not skipped, natural completion
+    // Instead of finishing, loop back to initial state
+    setLoopCount((prev) => prev + 1);
+
+    // Track completion of this loop
+    if (animationStartTime) {
+      const totalDuration = Date.now() - animationStartTime;
+      trackBlackHoleComplete(totalDuration);
+    }
+
+    // Reset to initial state for next loop
+    setTimeout(() => {
+      setPhase("initial");
+      setVideoFadeIn(false);
+      setZooming(false);
+      setAnimationStartTime(0);
+      setTransitionStartTime(0);
+    }, 1000);
   };
 
-  // Handler for skip button
+  // Handler for skip button - also loops back
   const handleSkipClick = () => {
-    triggerFadeOut(true); // true = user skipped
+    setLoopCount((prev) => prev + 1);
+
+    if (animationStartTime && transitionStartTime) {
+      const timeBeforeSkip = Date.now() - transitionStartTime;
+      trackBlackHoleSkip(timeBeforeSkip);
+    }
+
+    // Reset to initial state for next loop
+    setTimeout(() => {
+      setPhase("initial");
+      setVideoFadeIn(false);
+      setZooming(false);
+      setAnimationStartTime(0);
+      setTransitionStartTime(0);
+    }, 500);
   };
 
   // When phase becomes "transition", trigger the video fade in
@@ -127,8 +134,12 @@ export default function LandingOverlay({ onFinished }: LandingOverlayProps) {
             onClick={handleSkipClick}
             className="absolute bottom-10 px-4 py-2 bg-transparent text-white rounded border border-white hover:border-gray-400 hover:text-gray-400 transition duration-200"
           >
-            Skip
+            Skip Loop
           </button>
+          {/* Loop counter display */}
+          <div className="absolute top-10 right-10 text-white text-sm opacity-70">
+            Loop: {loopCount}
+          </div>
         </>
       )}
     </div>
