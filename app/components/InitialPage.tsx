@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { StarsCanvas } from "@/app/components/StarBackground";
 import { socialMedia } from "../data";
 import Image from "next/image";
@@ -8,13 +8,30 @@ interface InitialPageProps {
 }
 
 const InitialPage: React.FC<InitialPageProps> = ({ handleInitialClick }) => {
+  const [countdown, setCountdown] = useState(5);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          handleInitialClick(); // Trigger zoom transition when countdown reaches 0
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer); // Cleanup on unmount
+  }, [handleInitialClick]);
+
   return (
     // Hide entire component on mobile, only show on md+ screens
     <div className="hidden md:flex flex-col items-center h-screen">
       <StarsCanvas />
       <div className="h-[10vh]"></div>{" "}
       <video
-        className="object-contain cursor-pointer w-screen max-h-[70vh] mx-auto mix-blend-screen relative z-[100]"
+        className="object-contain cursor-pointer w-screen max-h-[80vh] mx-auto mix-blend-screen relative z-[100]"
         autoPlay
         muted
         loop
@@ -24,31 +41,16 @@ const InitialPage: React.FC<InitialPageProps> = ({ handleInitialClick }) => {
         <source src="/videos/blackhole.webm" type="video/webm" />
       </video>
       <div className="text-center">
-        <p className="text-white text-2xl sm:text-2xl md:text-2xl lg:text-3xl mt-4 blink-animation font-bold mb-4">
-          [
+        <p className="text-white text-2xl sm:text-2xl md:text-2xl lg:text-3xl mt-4 blink-animation font-bold ">
           <span className="bg-gradient-to-r from-[#FF0800] via-[#FF751B] to-[#FFE135] bg-clip-text text-transparent">
             Click
           </span>{" "}
-          On The Black Hole]
+          Anywhere to Start!
         </p>
-        <p className="text-white text-m sm:text-base md:text-lg lg:text-xl mt-4 font-bold blink-animation mb-40">
-          to explore Samuel&apos;s portfolio.
+        <p className="text-white text-m sm:text-base md:text-lg lg:text-xl font-bold blink-animation">
+          {countdown > 0 ? `Auto-start in ${countdown}s` : "Starting..."}
         </p>
       </div>
-      <style jsx>{`
-        @keyframes blink {
-          0%,
-          100% {
-            opacity: 1;
-          }
-          50% {
-            opacity: 0;
-          }
-        }
-        .blink-animation {
-          animation: blink 2.5s infinite;
-        }
-      `}</style>
       <div className="absolute bottom-[3%] flex space-x-4 mb-5">
         {socialMedia.map((info) => (
           <a
