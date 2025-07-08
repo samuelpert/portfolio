@@ -66,13 +66,25 @@ const Hero = ({ startAnimation }: { startAnimation: boolean }) => {
             applications.
           </p>
 
-          <a href="#projects">
-            <MagicButton
-              title="Look at my work"
-              icon={<FaLocationArrow />}
-              position="right"
-            />
-          </a>
+          <div className="flex gap-4">
+            <a href="#projects">
+              <MagicButton
+                title="My latest work"
+                icon={<FaLocationArrow />}
+                position="right"
+              />
+            </a>
+            <a
+              href="https://acrobat.adobe.com/id/urn:aaid:sc:US:047ab663-7ce6-4961-bb73-3ecd1bb59fb2"
+              target="_blank"
+            >
+              <MagicButton
+                title="My Resume"
+                icon={<FaLocationArrow />}
+                position="right"
+              />
+            </a>
+          </div>
         </div>
       </div>
     </div>
