@@ -120,6 +120,7 @@ export default function LandingOverlay({ onFinished }: LandingOverlayProps) {
             }`}
             src="/videos/transition.webm"
             autoPlay
+            muted
             playsInline
             onEnded={handleTransitionEnded}
           />
