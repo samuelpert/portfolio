@@ -40,7 +40,7 @@ const Hero = ({ startAnimation }: { startAnimation: boolean }) => {
           {/* Hide face image on mobile (below md breakpoint) */}
           <div className="hidden md:block">
             <img
-              src="/me.png" // Replace with the actual path to your image
+              src="/me.png"
               alt="Samuel"
               className="rounded-full border-2 border-[#FF751B] w-32 h-32 mb-4" // Adjust size as needed
             />
