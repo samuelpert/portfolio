@@ -19,7 +19,7 @@ const Hero = ({ startAnimation }: { startAnimation: boolean }) => {
 
   return (
     <div className="pb-20 pt-20 relative">
-      <div>
+      <div className="mix-blend-screen">
         <Spotlight
           className="-top-40 -left-10 md:-left-32 md:-top-20 h-screen"
           fill="white"
@@ -27,10 +27,7 @@ const Hero = ({ startAnimation }: { startAnimation: boolean }) => {
         <Spotlight className="top-28 left-80 h-[80vh] w-[50vw]" fill="white" />
       </div>
 
-      <div
-        className="h-screen w-full bg-black bg-grid-white/[0.06] flex items-center justify-center absolute top-0 left-0 mix-blend-screen"
-        style={{ transform: "translateZ(0)" }}
-      >
+      <div className="h-screen w-full bg-black bg-grid-white/[0.06] flex items-center justify-center absolute top-0 left-0 mix-blend-screen">
         {/* Radial gradient for the container to give a faded look */}
         <div className="absolute pointer-events-none inset-0 flex items-center justify-center bg-black [mask-image:radial-gradient(ellipse_at_center,transparent_20%,black)]"></div>
       </div>
@@ -66,7 +63,7 @@ const Hero = ({ startAnimation }: { startAnimation: boolean }) => {
             applications.
           </p>
 
-          <div className="flex gap-4">
+          <div className="flex gap-4 ">
             <a href="#projects">
               <MagicButton
                 title="My latest work"
