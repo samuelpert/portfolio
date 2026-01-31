@@ -118,18 +118,18 @@ export const trackVisit = () => {
 // Track when user MANUALLY CLICKS the black hole (Understood Assignment)
 export const trackBlackHoleStartClick = () => {
   event({
-    action: "blackhole_start",
+    action: "blackhole_manual_click", // Distinct name!
     category: "blackhole_interaction",
-    label: "manual_click", // User clicked it!
+    label: "manual_click",
   });
 };
 
 // Track when user WAITS for the auto-start (Did not click)
 export const trackBlackHoleWait = () => {
   event({
-    action: "blackhole_start",
+    action: "blackhole_auto_start", // Distinct name!
     category: "blackhole_interaction",
-    label: "auto_start", // Timer ran out
+    label: "auto_start",
   });
 };
 
