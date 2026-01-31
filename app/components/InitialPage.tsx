@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { StarsCanvas } from "@/app/components/StarBackground";
 import { socialMedia } from "../data";
 import Image from "next/image";
+import { trackBlackHoleWait, trackBlackHoleStartClick } from "./GoogleAnalytics";
 
 interface InitialPageProps {
   handleInitialClick: () => void;
@@ -19,6 +20,8 @@ const InitialPage: React.FC<InitialPageProps> = ({ handleInitialClick }) => {
 
   useEffect(() => {
     if (countdown === 0) {
+      // User waited for the auto-start
+      trackBlackHoleWait();
       handleInitialClick();
     }
   }, [countdown, handleInitialClick]);
@@ -34,7 +37,10 @@ const InitialPage: React.FC<InitialPageProps> = ({ handleInitialClick }) => {
         muted
         loop
         playsInline
-        onClick={handleInitialClick}
+        onClick={() => {
+            trackBlackHoleStartClick();
+            handleInitialClick();
+        }}
       >
         <source src="/videos/blackhole.webm" type="video/webm" />
       </video>

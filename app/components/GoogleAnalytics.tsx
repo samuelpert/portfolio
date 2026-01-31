@@ -69,54 +69,97 @@ export const event = ({
 };
 
 // ==========================================
-// BLACK HOLE ANIMATION TRACKING FUNCTIONS
+// VISIT & SOURCE TRACKING
 // ==========================================
 
-// Track when desktop user sees the black hole initially
-export const trackBlackHoleView = () => {
+export const trackVisit = () => {
+  if (typeof window === "undefined") return;
+
+  // 1. Check Source
+  const referrer = document.referrer;
+  let source = "direct";
+
+  if (referrer) {
+    if (referrer.includes("google")) {
+      source = "google_search";
+    } else if (referrer.includes(window.location.hostname)) {
+       // internal navigation, usually shouldn't happen on first load unless reload
+       source = "internal";
+    } else {
+      source = "referral_link";
+    }
+  }
+
+  // 2. Check First Time Visit
+  const hasVisited = localStorage.getItem("hasVisitedPortfolio");
+  const isFirstTime = !hasVisited;
+
+  if (isFirstTime) {
+    localStorage.setItem("hasVisitedPortfolio", "true");
+  }
+
+  // 3. Simple Device Check (for convenience)
+  const isMobile = window.innerWidth < 768;
+  const device = isMobile ? "mobile" : "desktop";
+
+  // Send Event
   event({
-    action: "blackhole_view",
-    category: "engagement",
-    label: "desktop_initial_view",
+    action: "visit",
+    category: "traffic",
+    label: `source: ${source} | first_time: ${isFirstTime} | device: ${device}`,
+    non_interaction: true, // This event doesn't impact bounce rate
   });
 };
 
-// Track when user clicks the black hole to start animation (KEY METRIC!)
-export const trackBlackHoleStart = () => {
+// ==========================================
+// BLACK HOLE ANIMATION TRACKING
+// ==========================================
+
+// Track when user MANUALLY CLICKS the black hole (Understood Assignment)
+export const trackBlackHoleStartClick = () => {
   event({
-    action: "blackhole_animation_start",
-    category: "engagement",
-    label: "desktop_entry",
+    action: "blackhole_start",
+    category: "blackhole_interaction",
+    label: "manual_click", // User clicked it!
   });
 };
 
-// Track when user skips the transition animation
+// Track when user WAITS for the auto-start (Did not click)
+export const trackBlackHoleWait = () => {
+  event({
+    action: "blackhole_start",
+    category: "blackhole_interaction",
+    label: "auto_start", // Timer ran out
+  });
+};
+
+// Track when user skip the transition animation
 export const trackBlackHoleSkip = (timeBeforeSkip: number) => {
   event({
-    action: "blackhole_animation_skip",
-    category: "engagement",
-    label: "user_skip",
+    action: "blackhole_skip",
+    category: "blackhole_interaction",
+    label: "clicked_skip_button",
     value: timeBeforeSkip,
   });
 };
 
-// Track when the full black hole animation sequence completes
+// Track when the full black hole animation sequence completes naturally
 export const trackBlackHoleComplete = (duration: number) => {
   event({
-    action: "blackhole_animation_complete",
-    category: "engagement",
+    action: "blackhole_complete",
+    category: "blackhole_interaction", // Consistent category
     value: duration,
   });
 };
 
 // ==========================================
-// OTHER PORTFOLIO EVENT TRACKING FUNCTIONS
+// PORTFOLIO ENGAGEMENT TRACKING
 // ==========================================
 
 // Track project card interactions
 export const trackProjectView = (projectName: string) => {
   event({
-    action: "view_project",
+    action: "click_project_card",
     category: "engagement",
     label: projectName,
   });
@@ -125,28 +168,36 @@ export const trackProjectView = (projectName: string) => {
 // Track contact button clicks
 export const trackContactClick = (method: string) => {
   event({
-    action: "contact_click",
+    action: "click_contact_me",
     category: "engagement",
     label: method,
+  });
+};
+
+// Track Resume download/view click
+export const trackResumeClick = () => {
+  event({
+    action: "click_resume",
+    category: "engagement",
+    label: "resume_view",
   });
 };
 
 // Track social media link clicks
 export const trackSocialClick = (platform: string) => {
   event({
-    action: "social_click",
+    action: "click_social",
     category: "engagement",
     label: platform,
   });
 };
 
-// Track scroll depth milestones
-export const trackScrollDepth = (percentage: number) => {
+// Track scroll to bottom
+export const trackScrollBottom = () => {
   event({
-    action: "scroll",
+    action: "scroll_bottom",
     category: "engagement",
-    label: `${percentage}%`,
-    value: percentage,
+    label: "reached_end",
   });
 };
 
@@ -165,17 +216,28 @@ export default function GoogleAnalytics() {
     }
   }, [pathname, searchParams]);
 
-  // Track scroll depth automatically
+  // Initial Visit Tracking
   useEffect(() => {
-    let maxScroll = 0;
+    trackVisit();
+  }, []);
+
+  // Track scroll depth & bottom
+  useEffect(() => {
+    let firedBottomEvent = false;
+
     const trackScroll = () => {
       const scrolled = window.scrollY;
       const height = document.documentElement.scrollHeight - window.innerHeight;
-      const scrolledPercentage = Math.round((scrolled / height) * 100);
+      
+      // Safety check for 0 height
+      if (height <= 0) return;
 
-      if (scrolledPercentage > maxScroll && scrolledPercentage % 25 === 0) {
-        maxScroll = scrolledPercentage;
-        trackScrollDepth(scrolledPercentage);
+      const scrolledPercentage = (scrolled / height) * 100;
+
+      // Track Bottom Reach (Threshold > 95% is usually good)
+      if (!firedBottomEvent && scrolledPercentage > 95) {
+        trackScrollBottom();
+        firedBottomEvent = true;
       }
     };
 

@@ -4,6 +4,7 @@ import { FaLocationArrow } from "react-icons/fa6";
 import MagicButton from "@/app/components/MagicButton";
 import { TextGenerateEffect } from "./ui/TextGenerateEffect";
 import { Spotlight } from "./ui/SpotLight";
+import { trackResumeClick } from "./GoogleAnalytics";
 
 const Hero = ({ startAnimation }: { startAnimation: boolean }) => {
   const [shouldAnimate, setShouldAnimate] = useState(false);
@@ -63,7 +64,8 @@ const Hero = ({ startAnimation }: { startAnimation: boolean }) => {
             applications.
           </p>
 
-          <div className="flex gap-4 ">
+
+          <div className="flex gap-4">
             <a href="#projects">
               <MagicButton
                 title="My latest work"
@@ -74,6 +76,7 @@ const Hero = ({ startAnimation }: { startAnimation: boolean }) => {
             <a
               href="https://acrobat.adobe.com/id/urn:aaid:sc:US:047ab663-7ce6-4961-bb73-3ecd1bb59fb2"
               target="_blank"
+              onClick={trackResumeClick}
             >
               <MagicButton
                 title="My Resume"

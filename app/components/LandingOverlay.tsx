@@ -1,9 +1,6 @@
-"use client";
 import {
   trackBlackHoleComplete,
-  trackBlackHoleStart,
   trackBlackHoleSkip,
-  trackBlackHoleView,
 } from "./GoogleAnalytics";
 import React, { useState, useEffect } from "react";
 import InitialPage from "./InitialPage";
@@ -28,10 +25,9 @@ export default function LandingOverlay({ onFinished }: LandingOverlayProps) {
       if (window.innerWidth < 768) {
         // Mobile users skip overlay entirely - no tracking needed
         onFinished();
-      } else {
-        // Desktop user sees the black hole - track this view
-        trackBlackHoleView();
       }
+      // Desktop users: Just let them see the UI. 
+      // 'visit' event already tracks they are on desktop.
     };
 
     checkMobile();
@@ -39,15 +35,12 @@ export default function LandingOverlay({ onFinished }: LandingOverlayProps) {
     return () => window.removeEventListener("resize", checkMobile);
   }, [onFinished]);
 
-  // When the initial black hole is clicked - THIS IS THE KEY TRACKING!
+  // When the initial black hole is clicked OR auto-started
   const handleInitialClick = () => {
     if (!zooming) {
-      // 🎯 Track that user clicked the black hole to start animation
-      trackBlackHoleStart();
-
       setZooming(true);
       setAnimationStartTime(Date.now());
-
+      
       setTimeout(() => {
         setPhase("transition");
         setZooming(false);
