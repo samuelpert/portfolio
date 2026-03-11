@@ -4,6 +4,7 @@ import { StarsCanvas } from "@/app/components/StarBackground";
 import GoogleAnalytics from "@/app/components/GoogleAnalytics";
 import { Suspense } from "react";
 import { SpeedInsights } from "@vercel/speed-insights/next"
+import { Analytics } from "@vercel/analytics/next"
 
 import "./globals.css";
 
@@ -50,6 +51,7 @@ export default function RootLayout({
         <StarsCanvas />
         {children}
         <SpeedInsights />
+        <Analytics />
         {/* Only load analytics in production */}
         {process.env.NODE_ENV === "production" && (
           <Suspense fallback={null}>
