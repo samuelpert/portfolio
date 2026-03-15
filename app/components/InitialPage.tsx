@@ -9,7 +9,7 @@ interface InitialPageProps {
 }
 
 const InitialPage: React.FC<InitialPageProps> = ({ handleInitialClick }) => {
-  const [countdown, setCountdown] = useState(5);
+  const [countdown, setCountdown] = useState(1);
 
   useEffect(() => {
     const timer = setInterval(() => {

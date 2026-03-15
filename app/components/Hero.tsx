@@ -10,10 +10,7 @@ const Hero = ({ startAnimation }: { startAnimation: boolean }) => {
   const [shouldAnimate, setShouldAnimate] = useState(false);
 
   useEffect(() => {
-    // On mobile (< 768px), start animation immediately
-    // On desktop, wait for startAnimation prop
-    const isMobile = window.innerWidth < 768;
-    if (isMobile || startAnimation) {
+    if (startAnimation) {
       setShouldAnimate(true);
     }
   }, [startAnimation]);

@@ -1,7 +1,4 @@
-import {
-  trackBlackHoleComplete,
-  trackBlackHoleSkip,
-} from "./GoogleAnalytics";
+import { trackBlackHoleComplete, trackBlackHoleSkip } from "./GoogleAnalytics";
 import React, { useState, useEffect } from "react";
 import InitialPage from "./InitialPage";
 
@@ -24,12 +21,12 @@ export default function LandingOverlay({ onFinished }: LandingOverlayProps) {
     if (!zooming) {
       setZooming(true);
       setAnimationStartTime(Date.now());
-      
+
       setTimeout(() => {
         setPhase("transition");
         setZooming(false);
         setTransitionStartTime(Date.now());
-      }, 500);
+      }, 2000);
     }
   };
 
@@ -82,9 +79,10 @@ export default function LandingOverlay({ onFinished }: LandingOverlayProps) {
     >
       {phase === "initial" && (
         <div
-          className={`transition-transform duration-1000 origin-center ${
+          className={`transition origin-center ease-out ${
             zooming ? "scale-[100]" : "scale-100"
           }`}
+          style={{ transitionProperty: "transform", transitionDuration: "15s" }}
         >
           <InitialPage handleInitialClick={handleInitialClick} />
         </div>
