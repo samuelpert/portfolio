@@ -19,22 +19,6 @@ export default function LandingOverlay({ onFinished }: LandingOverlayProps) {
   const [animationStartTime, setAnimationStartTime] = useState<number>(0);
   const [transitionStartTime, setTransitionStartTime] = useState<number>(0);
 
-  // Check if mobile and skip overlay entirely
-  useEffect(() => {
-    const checkMobile = () => {
-      if (window.innerWidth < 768) {
-        // Mobile users skip overlay entirely - no tracking needed
-        onFinished();
-      }
-      // Desktop users: Just let them see the UI. 
-      // 'visit' event already tracks they are on desktop.
-    };
-
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
-  }, [onFinished]);
-
   // When the initial black hole is clicked OR auto-started
   const handleInitialClick = () => {
     if (!zooming) {
@@ -98,7 +82,7 @@ export default function LandingOverlay({ onFinished }: LandingOverlayProps) {
     >
       {phase === "initial" && (
         <div
-          className={`transition-transform duration-1000 origin-[50%_30%] ${
+          className={`transition-transform duration-1000 origin-center ${
             zooming ? "scale-[100]" : "scale-100"
           }`}
         >

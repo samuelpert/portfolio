@@ -28,11 +28,11 @@ const InitialPage: React.FC<InitialPageProps> = ({ handleInitialClick }) => {
 
   return (
     // Hide entire component on mobile, only show on md+ screens
-    <div className="hidden md:flex flex-col items-center h-screen">
+    <div className="flex flex-col items-center justify-center h-screen">
       <StarsCanvas />
-      <div className="h-[10vh]"></div>{" "}
+      <div className="w-full h-[65vh] md:h-[80vh] overflow-hidden flex items-center justify-center">
       <video
-        className="object-contain cursor-pointer w-screen max-h-[80vh] mx-auto mix-blend-screen relative z-[100] mt-[-10vh]"
+        className="object-cover object-center cursor-pointer w-full h-full mx-auto mix-blend-screen"
         autoPlay
         muted
         loop
@@ -44,16 +44,6 @@ const InitialPage: React.FC<InitialPageProps> = ({ handleInitialClick }) => {
       >
         <source src="/videos/blackhole.webm" type="video/webm" />
       </video>
-      <div className="text-center">
-        <p className="text-white text-2xl sm:text-2xl md:text-2xl lg:text-3xl blink-animation font-bold ">
-          <span className="bg-gradient-to-r from-[#FF0800] via-[#FF751B] to-[#FFE135] bg-clip-text text-transparent">
-            Click
-          </span>{" "}
-          Anywhere to Start!
-        </p>
-        <p className="text-white text-m sm:text-base md:text-lg lg:text-xl font-bold blink-animation">
-          {countdown > 0 ? `Auto-start in ${countdown}s` : "Starting..."}
-        </p>
       </div>
       <div className="absolute bottom-[3%] flex space-x-4 mt-5 mb-5">
         {socialMedia.map((info) => (
