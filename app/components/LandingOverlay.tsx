@@ -23,7 +23,6 @@ const WORD_SEQUENCE: { word: string; duration: number }[] = [
 
 export default function LandingOverlay({ onFinished }: LandingOverlayProps) {
   const [phase, setPhase] = useState<Phase>("initial");
-  const [zooming, setZooming] = useState(false);
   const [fadeOut, setFadeOut] = useState(false);
   const [videoFadeIn, setVideoFadeIn] = useState(false);
   const [animationStartTime, setAnimationStartTime] = useState<number>(0);
@@ -42,7 +41,6 @@ export default function LandingOverlay({ onFinished }: LandingOverlayProps) {
     let animationId: number;
 
     const timer = setTimeout(() => {
-      setZooming(true);
       setAnimationStartTime(Date.now());
 
       const animate = (timestamp: number) => {
@@ -65,7 +63,6 @@ export default function LandingOverlay({ onFinished }: LandingOverlayProps) {
         } else {
           // Zoom finished, switch to transition phase
           setPhase("transition");
-          setZooming(false);
           setTransitionStartTime(Date.now());
         }
       };
@@ -85,7 +82,6 @@ export default function LandingOverlay({ onFinished }: LandingOverlayProps) {
 
     let wordIdx = 0;
     const timeouts: ReturnType<typeof setTimeout>[] = [];
-    const fadeInDuration = 700; // ms for fade-in
     const fadeOutDuration = 700; // ms for fade-out
 
     const showNextWord = () => {

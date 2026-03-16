@@ -2,11 +2,9 @@ import React, { useState, useEffect } from "react";
 import { StarsCanvas } from "@/app/components/StarBackground";
 import { socialMedia } from "../data";
 import Image from "next/image";
-import { trackBlackHoleWait, trackBlackHoleStartClick } from "./GoogleAnalytics";
+import { trackBlackHoleWait } from "./GoogleAnalytics";
 
-interface InitialPageProps {}
-
-const InitialPage: React.FC<InitialPageProps> = () => {
+const InitialPage: React.FC = () => {
   const [countdown, setCountdown] = useState(2);
 
   useEffect(() => {
