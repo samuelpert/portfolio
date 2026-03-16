@@ -4,12 +4,10 @@ import { socialMedia } from "../data";
 import Image from "next/image";
 import { trackBlackHoleWait, trackBlackHoleStartClick } from "./GoogleAnalytics";
 
-interface InitialPageProps {
-  handleInitialClick: () => void;
-}
+interface InitialPageProps {}
 
-const InitialPage: React.FC<InitialPageProps> = ({ handleInitialClick }) => {
-  const [countdown, setCountdown] = useState(5);
+const InitialPage: React.FC<InitialPageProps> = () => {
+  const [countdown, setCountdown] = useState(2);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -22,40 +20,24 @@ const InitialPage: React.FC<InitialPageProps> = ({ handleInitialClick }) => {
     if (countdown === 0) {
       // User waited for the auto-start
       trackBlackHoleWait();
-      handleInitialClick();
     }
-  }, [countdown, handleInitialClick]);
+  }, [countdown]);
 
   return (
     // Show component on all screen sizes
-    <div className="flex flex-col items-center h-screen">
-      <StarsCanvas />
-      <div className="h-[10vh]"></div>{" "}
+    <div className="flex flex-col items-center justify-center h-screen w-full relative overflow-hidden">
+      <div className="absolute inset-0 z-0 pointer-events-none">
+        <StarsCanvas />
+      </div>
       <video
-        className="object-contain cursor-pointer w-screen max-h-[80vh] mx-auto mix-blend-screen relative z-[100] mt-[-10vh]"
+        className="object-contain w-full h-full scale-[2.5] sm:scale-[2] md:scale-150 lg:scale-[1.1] mix-blend-screen relative z-[100]"
         autoPlay
         muted
-        loop
         playsInline
-        onClick={() => {
-            trackBlackHoleStartClick();
-            handleInitialClick();
-        }}
       >
         <source src="/videos/blackhole.webm" type="video/webm" />
       </video>
-      <div className="text-center">
-        <p className="text-white text-2xl sm:text-2xl md:text-2xl lg:text-3xl blink-animation font-bold ">
-          <span className="bg-gradient-to-r from-[#FF0800] via-[#FF751B] to-[#FFE135] bg-clip-text text-transparent">
-            Click
-          </span>{" "}
-          Anywhere to Start!
-        </p>
-        <p className="text-white text-m sm:text-base md:text-lg lg:text-xl font-bold blink-animation">
-          {countdown > 0 ? `Auto-start in ${countdown}s` : "Starting..."}
-        </p>
-      </div>
-      <div className="absolute bottom-[3%] flex space-x-4 mt-5 mb-5">
+      <div className="absolute bottom-[3%] flex space-x-4 mt-5 mb-5 z-[110]">
         {socialMedia.map((info) => (
           <a
             key={info.id}

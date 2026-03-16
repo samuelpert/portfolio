@@ -21,19 +21,53 @@ export default function LandingOverlay({ onFinished }: LandingOverlayProps) {
   const [animationStartTime, setAnimationStartTime] = useState<number>(0);
   const [transitionStartTime, setTransitionStartTime] = useState<number>(0);
 
-  // When the initial black hole is clicked OR auto-started
-  const handleInitialClick = () => {
-    if (!zooming) {
+  const zoomRef = React.useRef<HTMLDivElement>(null);
+
+  // Exponential zoom: perceived speed stays constant
+  useEffect(() => {
+    const startScale = 1;
+    const endScale = 10;
+    const duration = 1500; // total zoom duration in ms
+    let startTime: number | null = null;
+    let animationId: number;
+
+    const timer = setTimeout(() => {
       setZooming(true);
       setAnimationStartTime(Date.now());
-      
-      setTimeout(() => {
-        setPhase("transition");
-        setZooming(false);
-        setTransitionStartTime(Date.now());
-      }, 500);
-    }
-  };
+
+      const animate = (timestamp: number) => {
+        if (!startTime) startTime = timestamp;
+        const elapsed = timestamp - startTime;
+        const tLinear = Math.min(elapsed / duration, 1); // 0 to 1
+
+        // Ease-in: moderate start, accelerates over time
+        const tEased = Math.pow(tLinear, 10);
+
+        // Exponential interpolation with ease-in curve
+        const scale = startScale * Math.pow(endScale / startScale, tEased);
+
+        if (zoomRef.current) {
+          zoomRef.current.style.transform = `scale(${scale})`;
+        }
+
+        if (tLinear < 1) {
+          animationId = requestAnimationFrame(animate);
+        } else {
+          // Zoom finished, switch to transition phase
+          setPhase("transition");
+          setZooming(false);
+          setTransitionStartTime(Date.now());
+        }
+      };
+
+      animationId = requestAnimationFrame(animate);
+    }, 1000);
+
+    return () => {
+      clearTimeout(timer);
+      if (animationId) cancelAnimationFrame(animationId);
+    };
+  }, []);
 
   // Trigger fade-out (can be from skip button or natural end)
   const triggerFadeOut = (wasSkipped: boolean = false) => {
@@ -81,11 +115,10 @@ export default function LandingOverlay({ onFinished }: LandingOverlayProps) {
     >
       {phase === "initial" && (
         <div
-          className={`transition-transform duration-1000 origin-[50%_30%] ${
-            zooming ? "scale-[100]" : "scale-100"
-          }`}
+          ref={zoomRef}
+          className="origin-center"
         >
-          <InitialPage handleInitialClick={handleInitialClick} />
+          <InitialPage />
         </div>
       )}
       {phase === "transition" && (
