@@ -27,8 +27,8 @@ const InitialPage: React.FC<InitialPageProps> = ({ handleInitialClick }) => {
   }, [countdown, handleInitialClick]);
 
   return (
-    // Hide entire component on mobile, only show on md+ screens
-    <div className="hidden md:flex flex-col items-center h-screen">
+    // Show component on all screen sizes
+    <div className="flex flex-col items-center h-screen">
       <StarsCanvas />
       <div className="h-[10vh]"></div>{" "}
       <video

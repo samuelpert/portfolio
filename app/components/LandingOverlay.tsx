@@ -1,3 +1,5 @@
+"use client";
+
 import {
   trackBlackHoleComplete,
   trackBlackHoleSkip,
@@ -19,22 +21,6 @@ export default function LandingOverlay({ onFinished }: LandingOverlayProps) {
   const [animationStartTime, setAnimationStartTime] = useState<number>(0);
   const [transitionStartTime, setTransitionStartTime] = useState<number>(0);
 
-  // Check if mobile and skip overlay entirely
-  useEffect(() => {
-    const checkMobile = () => {
-      if (window.innerWidth < 768) {
-        // Mobile users skip overlay entirely - no tracking needed
-        onFinished();
-      }
-      // Desktop users: Just let them see the UI. 
-      // 'visit' event already tracks they are on desktop.
-    };
-
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
-  }, [onFinished]);
-
   // When the initial black hole is clicked OR auto-started
   const handleInitialClick = () => {
     if (!zooming) {
@@ -55,14 +41,11 @@ export default function LandingOverlay({ onFinished }: LandingOverlayProps) {
       setFadeOut(true);
 
       if (animationStartTime) {
-        const totalDuration = Date.now() - animationStartTime;
-
         if (wasSkipped && transitionStartTime) {
-          // Track skip with time before skip
           const timeBeforeSkip = Date.now() - transitionStartTime;
           trackBlackHoleSkip(timeBeforeSkip);
         } else {
-          // Track natural completion
+          const totalDuration = Date.now() - animationStartTime;
           trackBlackHoleComplete(totalDuration);
         }
       }
