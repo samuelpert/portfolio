@@ -13,6 +13,14 @@ interface LandingOverlayProps {
 
 type Phase = "initial" | "transition";
 
+// Words and their display durations in ms
+const WORD_SEQUENCE: { word: string; duration: number }[] = [
+  { word: "Welcome", duration: 2000 },
+  { word: "To", duration: 1000 },
+  { word: "My", duration: 1000 },
+  { word: "Portfolio.", duration: 2000 },
+];
+
 export default function LandingOverlay({ onFinished }: LandingOverlayProps) {
   const [phase, setPhase] = useState<Phase>("initial");
   const [zooming, setZooming] = useState(false);
@@ -20,6 +28,8 @@ export default function LandingOverlay({ onFinished }: LandingOverlayProps) {
   const [videoFadeIn, setVideoFadeIn] = useState(false);
   const [animationStartTime, setAnimationStartTime] = useState<number>(0);
   const [transitionStartTime, setTransitionStartTime] = useState<number>(0);
+  const [currentWordIndex, setCurrentWordIndex] = useState<number>(-1);
+  const [wordVisible, setWordVisible] = useState(false);
 
   const zoomRef = React.useRef<HTMLDivElement>(null);
 
@@ -68,6 +78,55 @@ export default function LandingOverlay({ onFinished }: LandingOverlayProps) {
       if (animationId) cancelAnimationFrame(animationId);
     };
   }, []);
+
+  // Word sequence animation during transition phase
+  useEffect(() => {
+    if (phase !== "transition") return;
+
+    let wordIdx = 0;
+    const timeouts: ReturnType<typeof setTimeout>[] = [];
+    const fadeInDuration = 700; // ms for fade-in
+    const fadeOutDuration = 700; // ms for fade-out
+
+    const showNextWord = () => {
+      if (wordIdx >= WORD_SEQUENCE.length) return;
+
+      const { duration } = WORD_SEQUENCE[wordIdx];
+      const idx = wordIdx;
+
+      // Set the word first with opacity 0, then fade in on next frame
+      setCurrentWordIndex(idx);
+      setWordVisible(false);
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          setWordVisible(true);
+        });
+      });
+
+      // After the display duration, fade out
+      const fadeOutTimeout = setTimeout(() => {
+        setWordVisible(false);
+
+        // After fade-out completes, show next word
+        const nextTimeout = setTimeout(() => {
+          wordIdx++;
+          showNextWord();
+        }, fadeOutDuration);
+        timeouts.push(nextTimeout);
+      }, duration);
+      timeouts.push(fadeOutTimeout);
+    };
+
+    // Start the first word after a brief delay
+    const startTimeout = setTimeout(() => {
+      showNextWord();
+    }, 500);
+    timeouts.push(startTimeout);
+
+    return () => {
+      timeouts.forEach((t) => clearTimeout(t));
+    };
+  }, [phase]);
 
   // Trigger fade-out (can be from skip button or natural end)
   const triggerFadeOut = (wasSkipped: boolean = false) => {
@@ -133,6 +192,18 @@ export default function LandingOverlay({ onFinished }: LandingOverlayProps) {
             playsInline
             onEnded={handleTransitionEnded}
           />
+          {/* Word sequence overlay */}
+          {currentWordIndex >= 0 && currentWordIndex < WORD_SEQUENCE.length && (
+            <div
+              className={`absolute inset-0 flex items-end justify-center pb-[25%] pointer-events-none transition-opacity duration-700 ${
+                wordVisible ? "opacity-100" : "opacity-0"
+              }`}
+            >
+              <span className="text-white font-bold text-[40px] md:text-5xl lg:text-6xl tracking-wide drop-shadow-[0_0_30px_rgba(255,255,255,0.3)]">
+                {WORD_SEQUENCE[currentWordIndex].word}
+              </span>
+            </div>
+          )}
           <button
             onClick={handleSkipClick}
             className="absolute bottom-10 px-4 py-2 bg-transparent text-white rounded border border-white hover:border-gray-400 hover:text-gray-400 transition duration-200"
