@@ -15,12 +15,12 @@ const spaceMono = Space_Mono({ subsets: ["latin"], weight: ["400", "700"] });
  * Scroll-driven space intro ported from the "Samuel's Space Intro" prototype.
  * A tall section pins a full-screen visual layer (sticky); scroll progress 0→1
  * drives the SAMUEL'S / SPACE titles and the WebGPU black hole camera dolly
- * ("fall in"). The stars are the ONE shared starfield (see app/lib/starField):
- * this layer renders a canvas behind the black hole — so the disc's
- * `mix-blend-screen` composites over real stars — while the fixed page-wide
- * StarField shows the *same* simulation. The intro just publishes its scroll
- * progress to `starFlow` so that single field does the fall-in warp; when the
- * section is scrolled past, the site below flows in over the same stars.
+ * ("fall in"). The stars live ONLY here — this layer renders the star canvas
+ * behind the black hole (so the disc's `mix-blend-screen` composites over real
+ * stars) and the intro publishes its scroll progress to `starFlow` to drive the
+ * fall-in warp. There is intentionally no starfield behind the portfolio: once
+ * you've fallen in, the content itself scrolls, so the intro (and its stars)
+ * simply scrolls away — nothing animates behind the page.
  */
 const CinematicIntro: React.FC<{ onEnter?: () => void }> = ({ onEnter }) => {
   const sectionRef = useRef<HTMLElement>(null);
@@ -29,15 +29,16 @@ const CinematicIntro: React.FC<{ onEnter?: () => void }> = ({ onEnter }) => {
   const botRef = useRef<HTMLHeadingElement>(null);
   const hintRef = useRef<HTMLDivElement>(null);
   const veilRef = useRef<HTMLDivElement>(null);
+  const blackoutRef = useRef<HTMLDivElement>(null);
   const holeControl = useRef<BlackHoleControl | null>(null);
 
   // Keep the latest onEnter without re-running the effect.
   const onEnterRef = useRef(onEnter);
   onEnterRef.current = onEnter;
 
-  // Render the shared starfield into this behind-the-black-hole canvas so the
-  // disc's mix-blend-screen composites over real stars (same simulation as the
-  // fixed page-wide StarField — one field, no drift).
+  // Draw the starfield into this behind-the-black-hole canvas so the disc's
+  // mix-blend-screen composites over real stars. These are the only stars on
+  // the site — they live inside the intro and scroll away with it.
   useEffect(() => {
     const canvas = starRef.current;
     if (!canvas) return;
@@ -72,9 +73,12 @@ const CinematicIntro: React.FC<{ onEnter?: () => void }> = ({ onEnter }) => {
       const ccx = cam.x;
       const ccy = cam.y;
 
-      // Dolly the 3D camera toward the singularity. The black hole re-raymarches
-      // at native resolution, so it stays sharp (no CSS upscaling of the canvas).
-      holeControl.current?.setCamera(p, ccx, ccy);
+      // Dolly the 3D camera toward the singularity with a quadratic ease-in, so
+      // the plunge starts gentle and accelerates into the hole — matching the
+      // prototype's `1 + p*p*9` growth. It re-raymarches at native resolution,
+      // so it stays sharp (no CSS upscaling of the canvas).
+      const camEase = p * p;
+      holeControl.current?.setCamera(camEase, ccx, ccy);
       if (topRef.current) {
         const s = 1 + p * 1.8;
         const ty = 15 - p * 55;
@@ -93,12 +97,19 @@ const CinematicIntro: React.FC<{ onEnter?: () => void }> = ({ onEnter }) => {
         hintRef.current.style.opacity = String(Math.max(0, 1 - p * 5));
       }
 
-      // "Past the event horizon": the screen darkens to a void as we plunge in,
-      // masking the most extreme close-up frames and handing off to the portfolio
-      // (which has a black background) emerging from the dark.
+      // "Past the event horizon": a warm void glows in as we plunge (0.5→0.82),
+      // then a pure-black blackout completes (0.82→1.0). By p≈1 the screen is
+      // fully black — exactly matching the portfolio's black background — so the
+      // sticky intro hands off to the scrolling page with no visible seam (the
+      // Hero just emerges from the dark, like the prototype's fade-in).
       if (veilRef.current) {
         veilRef.current.style.opacity = String(
-          Math.max(0, Math.min(1, (p - 0.55) / 0.37))
+          Math.max(0, Math.min(1, (p - 0.5) / 0.32))
+        );
+      }
+      if (blackoutRef.current) {
+        blackoutRef.current.style.opacity = String(
+          Math.max(0, Math.min(1, (p - 0.82) / 0.18))
         );
       }
 
@@ -120,8 +131,8 @@ const CinematicIntro: React.FC<{ onEnter?: () => void }> = ({ onEnter }) => {
       progress += (target - progress) * 0.09;
       cam.x += (pointer.x - cam.x) * 0.045;
       cam.y += (pointer.y - cam.y) * 0.045;
-      // Hand the smoothed progress to the single site-wide StarField so it does
-      // the fall-in warp — this layer no longer draws its own stars.
+      // Hand the smoothed progress to the star simulation so it does the
+      // fall-in warp behind the black hole.
       starFlow.progress = progress;
       applyTransforms();
       raf = requestAnimationFrame(loop);
@@ -193,7 +204,20 @@ const CinematicIntro: React.FC<{ onEnter?: () => void }> = ({ onEnter }) => {
             opacity: 0,
             pointerEvents: "none",
             background:
-              "radial-gradient(80% 70% at 50% 50%, rgba(20,6,2,.45) 0%, rgba(0,0,0,.96) 78%)",
+              "radial-gradient(80% 70% at 50% 50%, rgba(20,6,2,.5) 0%, rgba(0,0,0,.96) 76%)",
+          }}
+        />
+
+        <div
+          ref={blackoutRef}
+          aria-hidden
+          style={{
+            position: "absolute",
+            inset: 0,
+            zIndex: 3,
+            opacity: 0,
+            pointerEvents: "none",
+            background: "#000",
           }}
         />
 

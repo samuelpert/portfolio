@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import StarField from "@/app/components/StarField";
 import GoogleAnalytics from "@/app/components/GoogleAnalytics";
 import { Suspense } from "react";
 import { SpeedInsights } from "@vercel/speed-insights/next"
@@ -46,9 +45,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={`${inter.className}`}>
-        <StarField />
+    // suppressHydrationWarning: some browser extensions inject attributes onto
+    // <html>/<body> (e.g. data-__host_prefix_..._-filters-channel) before React
+    // hydrates, which otherwise trips a hydration mismatch. This only tolerates
+    // attribute diffs on these root elements — it does not affect the app UI.
+    <html lang="en" suppressHydrationWarning>
+      <body className={`${inter.className}`} suppressHydrationWarning>
         {children}
         <SpeedInsights />
         <Analytics />

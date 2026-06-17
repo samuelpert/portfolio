@@ -1,17 +1,15 @@
 /**
- * starField — the ONE star simulation, shared by every canvas that wants it.
+ * starField — the star simulation behind the cinematic intro.
  *
- * A single set of stars and a single animation loop are owned here. Any number
- * of full-viewport canvases can `registerStarCanvas`; each frame the loop
- * advances the stars once and draws the *identical* frame to every registered
- * canvas. That lets two canvases show the exact same field with zero drift:
- *   - a fixed page-background canvas (StarField), and
- *   - a canvas inside the cinematic intro, sitting behind the WebGPU black hole
- *     so the disc's `mix-blend-screen` has real stars to composite over.
+ * A single set of stars and a single animation loop are owned here. A canvas
+ * registers via `registerStarCanvas`; each frame the loop advances the stars
+ * and draws them. In practice the only canvas is the one inside the intro,
+ * sitting behind the WebGPU black hole so the disc's `mix-blend-screen` has
+ * real stars to composite over. (It still supports multiple canvases — they'd
+ * all show the identical frame — but there is intentionally no starfield behind
+ * the portfolio: once you've fallen in, the content scrolls, not the stars.)
  *
- * The warp is driven by `starFlow.progress` (the intro's fall-in) and, once
- * we've fallen in, by page-scroll velocity — so the stars you fall through in
- * the intro carry seamlessly into the portfolio.
+ * The warp is driven by `starFlow.progress` (the intro's fall-in).
  */
 import { starFlow, SPREAD } from "./starFlow";
 
