@@ -3,21 +3,24 @@
 import React, { useEffect, useRef } from "react";
 import { Exo_2, Space_Mono } from "next/font/google";
 import BlackHoleCanvas, { BlackHoleControl } from "./BlackHoleCanvas";
+import { starFlow } from "@/app/lib/starFlow";
+import { registerStarCanvas } from "@/app/lib/starField";
 
 const exo2 = Exo_2({ subsets: ["latin"], weight: ["200", "300", "500"] });
 const spaceMono = Space_Mono({ subsets: ["latin"], weight: ["400", "700"] });
-
-const STAR_COUNT = 820;
-const SPREAD = 7; // total depth crossed over a full scroll (warp intensity)
 
 /**
  * CinematicIntro
  *
  * Scroll-driven space intro ported from the "Samuel's Space Intro" prototype.
  * A tall section pins a full-screen visual layer (sticky); scroll progress 0→1
- * drives a 2D star-warp canvas, the SAMUEL'S / SPACE titles, and the CSS scale
- * of the WebGPU black hole ("fall in"). When the section is scrolled past, the
- * sticky layer releases and the real site below flows in seamlessly.
+ * drives the SAMUEL'S / SPACE titles and the WebGPU black hole camera dolly
+ * ("fall in"). The stars are the ONE shared starfield (see app/lib/starField):
+ * this layer renders a canvas behind the black hole — so the disc's
+ * `mix-blend-screen` composites over real stars — while the fixed page-wide
+ * StarField shows the *same* simulation. The intro just publishes its scroll
+ * progress to `starFlow` so that single field does the fall-in warp; when the
+ * section is scrolled past, the site below flows in over the same stars.
  */
 const CinematicIntro: React.FC<{ onEnter?: () => void }> = ({ onEnter }) => {
   const sectionRef = useRef<HTMLElement>(null);
@@ -32,41 +35,23 @@ const CinematicIntro: React.FC<{ onEnter?: () => void }> = ({ onEnter }) => {
   const onEnterRef = useRef(onEnter);
   onEnterRef.current = onEnter;
 
+  // Render the shared starfield into this behind-the-black-hole canvas so the
+  // disc's mix-blend-screen composites over real stars (same simulation as the
+  // fixed page-wide StarField — one field, no drift).
   useEffect(() => {
     const canvas = starRef.current;
     if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
+    return registerStarCanvas(canvas);
+  }, []);
 
+  useEffect(() => {
     let raf = 0;
-    let w = 0;
-    let h = 0;
-    let cx = 0;
-    let cy = 0;
     const pointer = { x: 0, y: 0 };
     const cam = { x: 0, y: 0 };
     let progress = 0;
     let target = 0;
-    let lastFlow: number | null = null;
     let enteredFired = false;
     let holePaused = false;
-
-    const stars = Array.from({ length: STAR_COUNT }, () => ({
-      x: Math.random() * 2 - 1,
-      y: Math.random() * 2 - 1,
-      z: 0.25 + Math.random() * 0.75,
-    }));
-
-    const onResize = () => {
-      const dpr = Math.min(2, window.devicePixelRatio || 1);
-      w = window.innerWidth;
-      h = window.innerHeight;
-      cx = w / 2;
-      cy = h / 2;
-      canvas.width = w * dpr;
-      canvas.height = h * dpr;
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    };
 
     const onMove = (e: MouseEvent) => {
       pointer.x = e.clientX / window.innerWidth - 0.5;
@@ -80,64 +65,6 @@ const CinematicIntro: React.FC<{ onEnter?: () => void }> = ({ onEnter }) => {
       const total = rect.height - window.innerHeight;
       const scrolled = Math.min(Math.max(-rect.top, 0), total);
       target = total > 0 ? scrolled / total : 0;
-    };
-
-    const drawStars = () => {
-      ctx.clearRect(0, 0, w, h);
-      const focal = Math.max(w, h) * 0.52;
-      const px = cam.x * 0.55;
-      const py = cam.y * 0.55;
-
-      // Depth travelled is a LINEAR function of scroll progress, so the warp is
-      // identical for the same scroll delta anywhere in the scroll.
-      const flow = progress * SPREAD;
-      let dScroll = flow - (lastFlow == null ? flow : lastFlow);
-      lastFlow = flow;
-      dScroll = Math.max(-0.5, Math.min(0.5, dScroll)); // clamp wild flicks
-      const delta = 0.0016 + dScroll; // idle drift + scroll-driven advance
-      const warp = Math.abs(dScroll) > 0.004; // streak only while scrolling
-
-      for (let i = 0; i < stars.length; i++) {
-        const s = stars[i];
-        const pz = s.z;
-        s.z -= delta;
-        let recycled = false;
-        if (s.z <= 0.02) {
-          s.z += 1;
-          s.x = Math.random() * 2 - 1;
-          s.y = Math.random() * 2 - 1;
-          recycled = true;
-        } else if (s.z > 1.0) {
-          s.z -= 1;
-          s.x = Math.random() * 2 - 1;
-          s.y = Math.random() * 2 - 1;
-          recycled = true;
-        }
-
-        const sx = cx + ((s.x + px) / s.z) * focal;
-        const sy = cy + ((s.y + py) / s.z) * focal;
-        if (sx < -60 || sx > w + 60 || sy < -60 || sy > h + 60) continue;
-        const depth = 1 - s.z;
-        const size = depth * 2.3 + 0.5;
-        const alpha = Math.min(1, 0.3 + depth * 1.1);
-
-        if (warp && !recycled) {
-          const ox = cx + ((s.x + px) / pz) * focal;
-          const oy = cy + ((s.y + py) / pz) * focal;
-          ctx.strokeStyle = "rgba(255,238,224," + alpha + ")";
-          ctx.lineWidth = size;
-          ctx.lineCap = "round";
-          ctx.beginPath();
-          ctx.moveTo(ox, oy);
-          ctx.lineTo(sx, sy);
-          ctx.stroke();
-        } else {
-          ctx.fillStyle = "rgba(255,245,235," + alpha + ")";
-          ctx.beginPath();
-          ctx.arc(sx, sy, size, 0, 6.2832);
-          ctx.fill();
-        }
-      }
     };
 
     const applyTransforms = () => {
@@ -193,23 +120,22 @@ const CinematicIntro: React.FC<{ onEnter?: () => void }> = ({ onEnter }) => {
       progress += (target - progress) * 0.09;
       cam.x += (pointer.x - cam.x) * 0.045;
       cam.y += (pointer.y - cam.y) * 0.045;
-      drawStars();
+      // Hand the smoothed progress to the single site-wide StarField so it does
+      // the fall-in warp — this layer no longer draws its own stars.
+      starFlow.progress = progress;
       applyTransforms();
       raf = requestAnimationFrame(loop);
     };
 
-    onResize();
     onScroll();
     window.addEventListener("mousemove", onMove, { passive: true });
     window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onResize);
     raf = requestAnimationFrame(loop);
 
     return () => {
       cancelAnimationFrame(raf);
       window.removeEventListener("mousemove", onMove);
       window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onResize);
     };
   }, []);
 
