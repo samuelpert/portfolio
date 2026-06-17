@@ -28,21 +28,11 @@ const Hero = ({ startAnimation }: { startAnimation: boolean }) => {
         <Spotlight className="top-28 left-80 h-[80vh] w-[50vw]" fill="white" />
       </div>
 
-      <div className="h-screen w-full bg-black bg-grid-white/[0.06] flex items-center justify-center absolute top-0 left-0 mix-blend-screen">
-        {/* Radial gradient for the container to give a faded look */}
-        <div className="absolute pointer-events-none inset-0 flex items-center justify-center bg-black [mask-image:radial-gradient(ellipse_at_center,transparent_20%,black)]"></div>
-      </div>
+      
 
       <div className="flex justify-center relative my-20">
         <div className="max-w-[89vw] md:max-w-2xl lg:max-w-[60vw] flex flex-col items-center justify-center">
           {/* Hide face image on mobile (below md breakpoint) */}
-          <div className="hidden md:block">
-            <img
-              src="/me.png"
-              alt="Samuel"
-              className="rounded-full border-2 border-[#FF751B] w-32 h-32 mb-4" // Adjust size as needed
-            />
-          </div>
 
           <p className="uppercase tracking-widest text-xs text-center text-orange-100 max-w-80">
             {/* Show different text on mobile vs desktop */}

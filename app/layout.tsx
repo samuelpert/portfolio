@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import { StarsCanvas } from "@/app/components/StarBackground";
+import StarField from "@/app/components/StarField";
 import GoogleAnalytics from "@/app/components/GoogleAnalytics";
 import { Suspense } from "react";
 import { SpeedInsights } from "@vercel/speed-insights/next"
@@ -48,7 +48,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.className}`}>
-        <StarsCanvas />
+        <StarField />
         {children}
         <SpeedInsights />
         <Analytics />
