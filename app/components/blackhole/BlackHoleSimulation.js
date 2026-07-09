@@ -102,7 +102,11 @@ export class BlackHoleSimulation {
       // === Camera ===
       resolution: uniform(new THREE.Vector2(window.innerWidth, window.innerHeight)),
       cameraPosition: uniform(new THREE.Vector3(0, 5, 20)),
-      cameraTarget: uniform(new THREE.Vector3(0, 0, 0))
+      cameraTarget: uniform(new THREE.Vector3(0, 0, 0)),
+      // Forward-axis scale of the pinhole camera: 1 = default, < 1 = wider FOV.
+      cameraFovScale: uniform(1.0),
+      // Roll around the view axis in radians.
+      cameraRoll: uniform(0.0)
     };
   }
 

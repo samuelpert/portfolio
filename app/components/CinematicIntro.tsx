@@ -53,6 +53,10 @@ const CinematicIntro: React.FC<{ onEnter?: () => void }> = ({ onEnter }) => {
     let target = 0;
     let enteredFired = false;
     let holePaused = false;
+    // True once we've jumped the (fully black) viewport to the top of the
+    // site. While snapped the blackout fades out on its own CSS transition
+    // instead of being scroll-driven.
+    let snapped = false;
 
     const onMove = (e: MouseEvent) => {
       pointer.x = e.clientX / window.innerWidth - 0.5;
@@ -107,10 +111,49 @@ const CinematicIntro: React.FC<{ onEnter?: () => void }> = ({ onEnter }) => {
           Math.max(0, Math.min(1, (p - 0.5) / 0.32))
         );
       }
-      if (blackoutRef.current) {
-        blackoutRef.current.style.opacity = String(
-          Math.max(0, Math.min(1, (p - 0.82) / 0.18))
-        );
+      // The blackout is floored by the RAW scroll position, not just the
+      // smoothed progress: on a fast flick the smoothed value lags, and the
+      // sticky section would unpin while the transition is still half-visible,
+      // scrolling the unfinished intro away. The raw floor completes at 0.95 —
+      // before the unpin at 1.0 — so the handoff is always black-on-black.
+      const black = Math.max(
+        0,
+        Math.min(1, Math.max((p - 0.82) / 0.18, (target - 0.8) / 0.15))
+      );
+      const bo = blackoutRef.current;
+      if (bo && !snapped) {
+        bo.style.transition = "none";
+        bo.style.opacity = String(black);
+      }
+
+      // The zoom handoff: once the screen is fully black and the intro is
+      // fully scrolled, silently jump the viewport to the top of the site and
+      // fade from black while the Hero zooms in. Without this the site slides
+      // up from below like normal page scrolling — with it, the site emerges
+      // in place, continuing the fall-in zoom.
+      if (!snapped && target >= 0.999 && black >= 1) {
+        snapped = true;
+        const sec = sectionRef.current;
+        if (sec) {
+          const siteTop = sec.offsetTop + sec.offsetHeight;
+          if (window.scrollY < siteTop) {
+            window.scrollTo({ top: siteTop, behavior: "instant" });
+          }
+        }
+        if (bo) {
+          bo.style.transition = "opacity 1s ease";
+          bo.style.opacity = "0";
+        }
+        if (!enteredFired) {
+          enteredFired = true;
+          onEnterRef.current?.();
+        }
+      }
+
+      // Scrolled back up into the intro (the veil is already near-opaque at
+      // this point, so resuming the scroll-driven blackout doesn't flash).
+      if (snapped && target < 0.85) {
+        snapped = false;
       }
 
       // Pause the WebGPU raymarch once we've fully fallen in (saves GPU while
@@ -121,14 +164,31 @@ const CinematicIntro: React.FC<{ onEnter?: () => void }> = ({ onEnter }) => {
         holeControl.current?.setPaused(shouldPause);
       }
 
-      if (!enteredFired && p > 0.85) {
+      // Also trigger off the raw scroll so a fast flick past the intro still
+      // starts the Hero animation immediately.
+      if (!enteredFired && (p > 0.85 || target > 0.95)) {
         enteredFired = true;
         onEnterRef.current?.();
       }
     };
 
+    let lastTime = performance.now();
     const loop = () => {
-      progress += (target - progress) * 0.09;
+      const now = performance.now();
+      const dt = Math.min((now - lastTime) / 1000, 0.05);
+      lastTime = now;
+
+      // Gap-adaptive, framerate-independent smoothing. Slow scrolls keep the
+      // old gentle feel (base rate ≈ the previous 0.09/frame at 60fps), but
+      // when a fast flick opens a big gap the rate ramps up so the plunge and
+      // blackout finish before the sticky section unpins, instead of the
+      // transition getting cut off mid-way.
+      const gap = target - progress;
+      const rate = 6 + Math.abs(gap) * 16;
+      progress += gap * (1 - Math.exp(-rate * dt));
+      // Snap when close so progress actually reaches 1 and pauses the GPU.
+      if (Math.abs(target - progress) < 0.0005) progress = target;
+
       cam.x += (pointer.x - cam.x) * 0.045;
       cam.y += (pointer.y - cam.y) * 0.045;
       // Hand the smoothed progress to the star simulation so it does the
@@ -139,6 +199,14 @@ const CinematicIntro: React.FC<{ onEnter?: () => void }> = ({ onEnter }) => {
     };
 
     onScroll();
+    // Page loaded (or refreshed) already past the intro: skip the transition
+    // entirely — no blackout, no snap, respect the restored scroll position.
+    if (target >= 0.999) {
+      progress = target;
+      snapped = true;
+      enteredFired = true;
+      onEnterRef.current?.();
+    }
     window.addEventListener("mousemove", onMove, { passive: true });
     window.addEventListener("scroll", onScroll, { passive: true });
     raf = requestAnimationFrame(loop);
@@ -168,7 +236,25 @@ const CinematicIntro: React.FC<{ onEnter?: () => void }> = ({ onEnter }) => {
   };
 
   return (
-    <section ref={sectionRef} style={{ position: "relative", height: "300vh" }}>
+    <>
+      {/*
+        The blackout lives OUTSIDE the sticky section as a fixed overlay so it
+        keeps covering the screen through the snap-to-site scroll jump — inside
+        the section it would scroll away with it, exposing the jump.
+      */}
+      <div
+        ref={blackoutRef}
+        aria-hidden
+        style={{
+          position: "fixed",
+          inset: 0,
+          zIndex: 40,
+          opacity: 0,
+          pointerEvents: "none",
+          background: "#000",
+        }}
+      />
+      <section ref={sectionRef} style={{ position: "relative", height: "300vh" }}>
       <div
         className="sticky top-0 h-screen w-full overflow-hidden"
         style={{
@@ -205,19 +291,6 @@ const CinematicIntro: React.FC<{ onEnter?: () => void }> = ({ onEnter }) => {
             pointerEvents: "none",
             background:
               "radial-gradient(80% 70% at 50% 50%, rgba(20,6,2,.5) 0%, rgba(0,0,0,.96) 76%)",
-          }}
-        />
-
-        <div
-          ref={blackoutRef}
-          aria-hidden
-          style={{
-            position: "absolute",
-            inset: 0,
-            zIndex: 3,
-            opacity: 0,
-            pointerEvents: "none",
-            background: "#000",
           }}
         />
 
@@ -266,7 +339,8 @@ const CinematicIntro: React.FC<{ onEnter?: () => void }> = ({ onEnter }) => {
           </span>
         </div>
       </div>
-    </section>
+      </section>
+    </>
   );
 };
 

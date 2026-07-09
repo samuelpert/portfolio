@@ -245,11 +245,15 @@ export function createBlackHoleShader(uniforms) {
     const camPos = uniforms.cameraPosition;
     const camTarget = uniforms.cameraTarget;
     const camForward = normalize(camTarget.sub(camPos));
-    const worldUp = vec3(0.0, 1.0, 0.0);
+    // Tilting the up vector rolls the camera around the view axis (the intro
+    // uses it for the fall-in vertigo).
+    const roll = uniforms.cameraRoll;
+    const worldUp = vec3(sin(roll), cos(roll), 0.0);
     const camRight = normalize(cross(worldUp, camForward));
     const camUp = cross(camForward, camRight);
 
-    const fov = float(1.0);
+    // < 1.0 widens the field of view (fall-in tunnel effect).
+    const fov = uniforms.cameraFovScale;
     const rayDir = normalize(
       camForward.mul(fov)
         .add(camRight.mul(screenPos.x))
@@ -267,6 +271,21 @@ export function createBlackHoleShader(uniforms) {
     const innerR = uniforms.diskInnerRadius;
     const outerR = uniforms.diskOuterRadius;
 
+    // Bounding sphere: everything visible (disk + meaningful lensing) happens
+    // within this radius. Rays that miss it entirely are pure background and
+    // pay one intersection test instead of the full march; rays that hit it
+    // fast-forward straight to its surface before fine marching begins. This
+    // makes all the empty-space pixels around the hole nearly free.
+    const boundR = outerR.mul(1.15);
+    const midpoint = dot(rayPos, rayDir);
+    const centerDistSq = dot(rayPos, rayPos).sub(boundR.mul(boundR));
+    const discriminant = midpoint.mul(midpoint).sub(centerDistSq);
+    If(discriminant.lessThan(0.0), () => {
+      escaped.assign(1.0);
+    });
+    const tEnter = midpoint.negate().sub(sqrt(discriminant.max(0.0))).max(0.0);
+    rayPos.addAssign(rayDir.mul(tEnter));
+
     // Raymarching loop
     Loop(48, () => {
       If(escaped.greaterThan(0.5).or(captured.greaterThan(0.5)).or(alpha.greaterThan(0.99)), () => {
@@ -281,20 +300,28 @@ export function createBlackHoleShader(uniforms) {
         Break();
       });
 
-      // Escaped to infinity
-      If(r.greaterThan(100.0), () => {
+      // Escaped: back outside the bounding sphere and moving away from the
+      // hole — nothing left to hit. Much cheaper than marching to r > 100.
+      If(r.greaterThan(boundR.mul(1.05)).and(dot(rayPos, rayDir).greaterThan(0.0)), () => {
         escaped.assign(1.0);
         Break();
       });
 
+      // Adaptive step length: fine steps near the hole where light bends hard,
+      // coarse steps far away where paths are nearly straight. Cuts the average
+      // iterations per ray dramatically with no visible quality loss.
+      const stepLen = uniforms.stepSize
+        .mul(clamp(r.mul(0.18), float(1.0), float(4.0)))
+        .toVar('stepLen');
+
       // Gravitational light bending: a = -rs/r² toward center
       const toCenter = rayPos.negate().div(r);
-      const bendStrength = rs.div(r.mul(r)).mul(uniforms.stepSize).mul(uniforms.gravitationalLensing);
+      const bendStrength = rs.div(r.mul(r)).mul(stepLen).mul(uniforms.gravitationalLensing);
       rayDir.addAssign(toCenter.mul(bendStrength));
       rayDir.assign(normalize(rayDir));
 
       prevPos.assign(rayPos);
-      rayPos.addAssign(rayDir.mul(uniforms.stepSize));
+      rayPos.addAssign(rayDir.mul(stepLen));
 
       // Disk plane intersection (Y = 0)
       const crossedPlane = prevPos.y.mul(rayPos.y).lessThan(0.0);

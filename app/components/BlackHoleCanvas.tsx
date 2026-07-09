@@ -99,9 +99,13 @@ const BlackHoleCanvas: React.FC<Props> = ({ control }) => {
         const w = container.clientWidth || window.innerWidth;
         const h = container.clientHeight || window.innerHeight;
 
-        renderer = new THREE.WebGPURenderer({ antialias: true });
+        // MSAA is pointless here (the whole frame is one raymarched quad, no
+        // geometric edges) and a capped pixel ratio keeps the per-pixel
+        // raymarch affordable on retina displays — bloom softens the result
+        // anyway, so the lower internal resolution is not visible.
+        renderer = new THREE.WebGPURenderer({ antialias: false });
         renderer.setSize(w, h);
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.25));
         renderer.toneMapping = THREE.ACESFilmicToneMapping;
         Object.assign(renderer.domElement.style, {
           width: "100%",
@@ -122,12 +126,18 @@ const BlackHoleCanvas: React.FC<Props> = ({ control }) => {
         // a wide shot toward the disc, re-raymarched every frame at native
         // resolution (so it stays sharp, unlike CSS-scaling the canvas).
         const CAM_FAR = { x: 0, y: -5, z: 20 };
-        // Dives in past the disc's inner edge — the "inside the black hole" plunge.
-        // The darkening veil in CinematicIntro masks the final, most extreme frames.
-        const CAM_NEAR = { x: 0, y: -0.8, z: 2.5 };
+        // Dives in past the disc's inner edge, almost to the horizon — the
+        // "inside the black hole" plunge. The darkening veil in CinematicIntro
+        // masks the final, most extreme frames.
+        const CAM_NEAR = { x: 0, y: -0.4, z: 1.4 };
         let camProgress = 0;
         let camPx = 0;
         let camPy = 0;
+
+        const simulation = new BlackHoleSimulation(scene, BLACK_HOLE_CONFIG);
+        simulation.createBlackHole();
+        simulation.onResize(w, h);
+
         const applyCamera = () => {
           const p = camProgress;
           camera.position.set(
@@ -136,12 +146,15 @@ const BlackHoleCanvas: React.FC<Props> = ({ control }) => {
             CAM_FAR.z + (CAM_NEAR.z - CAM_FAR.z) * p
           );
           camera.lookAt(0, 0, 0);
+          // Widen the FOV and roll the view as we plunge — the tunnel-vertigo
+          // cues that sell "falling inside" rather than zooming a flat image.
+          const u = simulation.uniforms;
+          if (u) {
+            u.cameraFovScale.value = 1 - p * 0.45;
+            u.cameraRoll.value = p * 0.3;
+          }
         };
         applyCamera();
-
-        const simulation = new BlackHoleSimulation(scene, BLACK_HOLE_CONFIG);
-        simulation.createBlackHole();
-        simulation.onResize(w, h);
 
         // Bloom post-processing (matches the standalone's tuned look)
         const post = new THREE.PostProcessing(renderer);
@@ -154,7 +167,13 @@ const BlackHoleCanvas: React.FC<Props> = ({ control }) => {
         post.outputNode = scenePassColor.add(bloomPass);
 
         const clock = new THREE.Clock();
+        // Cap the raymarch at ~60fps: on 120Hz displays (ProMotion) rAF fires
+        // every frame, which doubles GPU load for no visible gain here.
+        let lastFrameTime = 0;
         const renderFrame = () => {
+          const now = performance.now();
+          if (now - lastFrameTime < 15) return;
+          lastFrameTime = now;
           const delta = Math.min(clock.getDelta(), 0.033);
           applyCamera();
           simulation.update(delta, camera);
