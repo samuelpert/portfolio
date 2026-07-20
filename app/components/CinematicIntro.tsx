@@ -53,6 +53,13 @@ const CinematicIntro: React.FC<{ onEnter?: () => void }> = ({ onEnter }) => {
     let target = 0;
     let enteredFired = false;
     let holePaused = false;
+    // GTA-VI-style paced scroll: while the intro is pinned, wheel input is
+    // intercepted and queued, then drained at a capped rate so the full
+    // fall-in can never take less than this many seconds — a hard flick
+    // rides the whole plunge instead of skipping it. Touch/scrollbar input
+    // bypasses this and is caught by the raw-scroll blackout floor below.
+    const MIN_INTRO_SECONDS = 2.8;
+    let pendingScroll = 0;
     // True once we've jumped the (fully black) viewport to the top of the
     // site. While snapped the blackout fades out on its own CSS transition
     // instead of being scroll-driven.
@@ -70,6 +77,32 @@ const CinematicIntro: React.FC<{ onEnter?: () => void }> = ({ onEnter }) => {
       const total = rect.height - window.innerHeight;
       const scrolled = Math.min(Math.max(-rect.top, 0), total);
       target = total > 0 ? scrolled / total : 0;
+    };
+
+    const onWheel = (e: WheelEvent) => {
+      if (e.ctrlKey) return; // pinch-zoom, not scrolling
+      const sec = sectionRef.current;
+      if (!sec) return;
+      const rect = sec.getBoundingClientRect();
+      const total = rect.height - window.innerHeight;
+      const pinned = rect.top <= 0 && rect.bottom - window.innerHeight > 1;
+      if (!pinned) {
+        pendingScroll = 0;
+        return;
+      }
+      e.preventDefault();
+      // Normalize deltaMode (0 = pixels, 1 = lines, 2 = pages).
+      let dy = e.deltaY;
+      if (e.deltaMode === 1) dy *= 16;
+      else if (e.deltaMode === 2) dy *= window.innerHeight;
+      pendingScroll += dy;
+      // Never queue more than what's left of the intro (either direction), so
+      // momentum doesn't keep pushing after the handoff.
+      const scrolled = Math.min(Math.max(-rect.top, 0), total);
+      pendingScroll = Math.max(
+        -scrolled - 10,
+        Math.min(total - scrolled + 10, pendingScroll)
+      );
     };
 
     const applyTransforms = () => {
@@ -175,8 +208,28 @@ const CinematicIntro: React.FC<{ onEnter?: () => void }> = ({ onEnter }) => {
     let lastTime = performance.now();
     const loop = () => {
       const now = performance.now();
-      const dt = Math.min((now - lastTime) / 1000, 0.05);
+      const rawDt = (now - lastTime) / 1000;
+      const dt = Math.min(rawDt, 0.05);
       lastTime = now;
+
+      // Drain queued wheel input at a capped rate — this is what paces the
+      // plunge. The cap is the full intro distance over MIN_INTRO_SECONDS.
+      // Uses wall-clock dt (not the smoothing-capped one) so dropped frames
+      // don't slow the drain below the intended pace.
+      if (pendingScroll !== 0) {
+        const sec = sectionRef.current;
+        if (sec) {
+          const total = sec.getBoundingClientRect().height - window.innerHeight;
+          const maxRate = total / MIN_INTRO_SECONDS; // px per second
+          const step =
+            Math.sign(pendingScroll) *
+            Math.min(Math.abs(pendingScroll), maxRate * Math.min(rawDt, 0.25));
+          window.scrollBy(0, step);
+          pendingScroll -= step;
+          if (Math.abs(pendingScroll) < 0.5) pendingScroll = 0;
+          onScroll(); // pick up the new position this same frame
+        }
+      }
 
       // Gap-adaptive, framerate-independent smoothing. Slow scrolls keep the
       // old gentle feel (base rate ≈ the previous 0.09/frame at 60fps), but
@@ -209,12 +262,15 @@ const CinematicIntro: React.FC<{ onEnter?: () => void }> = ({ onEnter }) => {
     }
     window.addEventListener("mousemove", onMove, { passive: true });
     window.addEventListener("scroll", onScroll, { passive: true });
+    // Must be non-passive: the intro consumes wheel input while pinned.
+    window.addEventListener("wheel", onWheel, { passive: false });
     raf = requestAnimationFrame(loop);
 
     return () => {
       cancelAnimationFrame(raf);
       window.removeEventListener("mousemove", onMove);
       window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("wheel", onWheel);
     };
   }, []);
 
