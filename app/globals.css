@@ -52,3 +52,28 @@
     opacity: 1; /* Fully visible */
   }
 }
+
+/* Cinematic intro (CinematicIntro.tsx) */
+@keyframes glowPulse {
+  0%,
+  100% {
+    text-shadow: 0 0 18px rgba(255, 120, 40, 0.55),
+      0 0 46px rgba(255, 80, 20, 0.4), 0 0 88px rgba(255, 55, 0, 0.26);
+  }
+  50% {
+    text-shadow: 0 0 28px rgba(255, 150, 65, 0.78),
+      0 0 70px rgba(255, 95, 28, 0.56), 0 0 130px rgba(255, 60, 0, 0.4);
+  }
+}
+
+@keyframes hintBob {
+  0%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.55;
+  }
+  50% {
+    transform: translateY(8px);
+    opacity: 1;
+  }
+}

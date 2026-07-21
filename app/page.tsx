@@ -1,33 +1,41 @@
 "use client";
 
-import React, { useState } from "react";
-import LandingOverlay from "./components/LandingOverlay";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import CinematicIntro from "./components/CinematicIntro";
 import Projects from "./components/Projects";
 import Hero from "./components/Hero";
 import Footer from "./components/Footer";
-import { Navbar } from "./components/ui/Navbar";
-import { navItems } from "./data";
+import { registerStarCanvas } from "@/app/lib/starField";
 
 export default function Home() {
-  const [overlayFinished, setOverlayFinished] = useState(false);
-  const [startAnimation, setStartAnimation] = useState(false);
-
-  const handleOverlayFinish = () => {
-    setOverlayFinished(true);
-    setStartAnimation(true);
-  };
+  const [entered, setEntered] = useState(false);
+  const handleEnter = useCallback(() => setEntered(true), []);
+  const bgStarRef = useRef<HTMLCanvasElement>(null);
+  useEffect(() => {
+    const canvas = bgStarRef.current;
+    if (!canvas) return;
+    return registerStarCanvas(canvas);
+  }, []);
 
   return (
     <div className="relative">
-      {!overlayFinished && <LandingOverlay onFinished={handleOverlayFinish} />}
-      <main
-        className={`min-h-screen ${
-          overlayFinished ? "block" : "hidden"
-        } relative flex justify-center items-center flex-col mx-auto sm:px-10 px-2 overflow-clip`}
-      >
+      <canvas
+        ref={bgStarRef}
+        aria-hidden
+        className="fixed inset-0 z-30 block h-full w-full"
+        style={{
+          pointerEvents: "none",
+          mixBlendMode: "screen",
+          opacity: entered ? 1 : 0,
+          transition: "opacity 1.2s ease",
+        }}
+      />
+
+      <CinematicIntro onEnter={handleEnter} />
+
+      <main className="relative z-10 min-h-screen flex justify-center items-center flex-col mx-auto sm:px-10 px-2 overflow-clip">
         <div className="max-w-7xl w-full">
-          <Navbar navItems={navItems} />
-          <Hero startAnimation={startAnimation} />
+          <Hero startAnimation={entered} />
           <Projects />
           <Footer />
         </div>

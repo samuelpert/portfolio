@@ -15,19 +15,14 @@ const MagicButton = ({
 }) => {
   return (
     <button
-      className="relative inline-flex h-12 w-full md:w-50 md:mt-10 overflow-hidden rounded-lg p-[1px] focus:outline-none"
+      className={`inline-flex h-12 w-full md:w-50 md:mt-10 items-center justify-center rounded-lg
+           border bg-slate-950 px-7 text-sm font-medium text-white gap-2 focus:outline-none ${otherClasses}`}
+      style={{ borderColor: "#FF751B" }}
       onClick={handleClick}
     >
-      <span className="absolute inset-[-1000%] bg-[#FF751B]" />
-
-      <span
-        className={`inline-flex h-full w-full cursor-pointer items-center justify-center rounded-lg
-             bg-black px-7 text-sm font-medium text-white backdrop-blur-3xl gap-2 z-0 ${otherClasses}`}
-      >
-        {position === "left" && icon}
-        {title}
-        {position === "right" && icon}
-      </span>
+      {position === "left" && icon}
+      {title}
+      {position === "right" && icon}
     </button>
   );
 };

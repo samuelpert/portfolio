@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { FaLocationArrow } from "react-icons/fa6";
 
 import MagicButton from "@/app/components/MagicButton";
@@ -7,42 +7,71 @@ import { Spotlight } from "./ui/SpotLight";
 import { trackResumeClick } from "./GoogleAnalytics";
 
 const Hero = ({ startAnimation }: { startAnimation: boolean }) => {
+  const rootRef = useRef<HTMLDivElement>(null);
   const [shouldAnimate, setShouldAnimate] = useState(false);
+  const [inView, setInView] = useState(false);
+
+  // Only start the emergence once the hero is actually on screen — otherwise
+  // the animation plays hidden below the fold during the intro blackout and
+  // the user arrives to a finished, static hero.
+  useEffect(() => {
+    const el = rootRef.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setInView(true);
+          obs.disconnect();
+        }
+      },
+      { threshold: 0.25 }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
 
   useEffect(() => {
-    // On mobile (< 768px), start animation immediately
-    // On desktop, wait for startAnimation prop
+    // On mobile (< 768px), start animation as soon as the hero is visible
+    // On desktop, also wait for the intro's startAnimation signal
     const isMobile = window.innerWidth < 768;
-    if (isMobile || startAnimation) {
+    if ((isMobile || startAnimation) && inView) {
       setShouldAnimate(true);
     }
-  }, [startAnimation]);
+  }, [startAnimation, inView]);
 
   return (
-    <div className="pb-20 pt-20 relative">
-      <div className="mix-blend-screen">
-        <Spotlight
-          className="-top-40 -left-10 md:-left-32 md:-top-20 h-screen"
+    // Emerge from the void: after the black hole swallows the screen, the hero
+    // scales up out of the dark toward the viewer — continuing the fall-in
+    // motion — rather than looking like it was scrolled to.
+    <div
+      ref={rootRef}
+      className="pb-20 pt-20 relative"
+      style={{
+        opacity: shouldAnimate ? 1 : 0,
+        transform: shouldAnimate ? "scale(1)" : "scale(0.82)",
+        transition:
+          "opacity 1s ease-out, transform 1.5s cubic-bezier(0.16, 1, 0.3, 1)",
+      }}
+    >
+      <Spotlight
+          className="-top-40 -left-10 md:-left-32 md:-top-20 h-screen mix-blend-screen"
           fill="white"
         />
-        <Spotlight className="top-28 left-80 h-[80vh] w-[50vw]" fill="white" />
-      </div>
+      <Spotlight className="top-28 left-80 h-[80vh] w-[50vw] mix-blend-screen" fill="white" />
 
-      <div className="h-screen w-full bg-black bg-grid-white/[0.06] flex items-center justify-center absolute top-0 left-0 mix-blend-screen">
-        {/* Radial gradient for the container to give a faded look */}
-        <div className="absolute pointer-events-none inset-0 flex items-center justify-center bg-black [mask-image:radial-gradient(ellipse_at_center,transparent_20%,black)]"></div>
-      </div>
+      {/* Subtle grid overlay — transparent bg so the black body shows through naturally */}
+      <div
+        className="h-screen w-full absolute top-0 left-0 pointer-events-none"
+        style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' width='32' height='32' fill='none' stroke='rgba(255,255,255,0.15)'%3E%3Cpath d='M0 .5H31.5V32'/%3E%3C/svg%3E")`,
+          maskImage: "radial-gradient(ellipse at center, black 5%, transparent 70%)",
+          WebkitMaskImage: "radial-gradient(ellipse at center, black 5%, transparent 70%)",
+        }}
+      />
 
       <div className="flex justify-center relative my-20">
         <div className="max-w-[89vw] md:max-w-2xl lg:max-w-[60vw] flex flex-col items-center justify-center">
           {/* Hide face image on mobile (below md breakpoint) */}
-          <div className="hidden md:block">
-            <img
-              src="/me.png"
-              alt="Samuel"
-              className="rounded-full border-2 border-[#FF751B] w-32 h-32 mb-4" // Adjust size as needed
-            />
-          </div>
 
           <p className="uppercase tracking-widest text-xs text-center text-orange-100 max-w-80">
             {/* Show different text on mobile vs desktop */}
