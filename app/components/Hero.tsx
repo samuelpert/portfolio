@@ -53,18 +53,21 @@ const Hero = ({ startAnimation }: { startAnimation: boolean }) => {
           "opacity 1s ease-out, transform 1.5s cubic-bezier(0.16, 1, 0.3, 1)",
       }}
     >
-      <div className="mix-blend-screen">
-        <Spotlight
-          className="-top-40 -left-10 md:-left-32 md:-top-20 h-screen"
+      <Spotlight
+          className="-top-40 -left-10 md:-left-32 md:-top-20 h-screen mix-blend-screen"
           fill="white"
         />
-        <Spotlight className="top-28 left-80 h-[80vh] w-[50vw]" fill="white" />
-      </div>
+      <Spotlight className="top-28 left-80 h-[80vh] w-[50vw] mix-blend-screen" fill="white" />
 
-      <div className="h-screen w-full bg-black bg-grid-white/[0.06] flex items-center justify-center absolute top-0 left-0 mix-blend-screen">
-        {/* Radial gradient for the container to give a faded look */}
-        <div className="absolute pointer-events-none inset-0 flex items-center justify-center bg-black [mask-image:radial-gradient(ellipse_at_center,transparent_20%,black)]"></div>
-      </div>
+      {/* Subtle grid overlay — transparent bg so the black body shows through naturally */}
+      <div
+        className="h-screen w-full absolute top-0 left-0 pointer-events-none"
+        style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' width='32' height='32' fill='none' stroke='rgba(255,255,255,0.15)'%3E%3Cpath d='M0 .5H31.5V32'/%3E%3C/svg%3E")`,
+          maskImage: "radial-gradient(ellipse at center, black 5%, transparent 70%)",
+          WebkitMaskImage: "radial-gradient(ellipse at center, black 5%, transparent 70%)",
+        }}
+      />
 
       <div className="flex justify-center relative my-20">
         <div className="max-w-[89vw] md:max-w-2xl lg:max-w-[60vw] flex flex-col items-center justify-center">
