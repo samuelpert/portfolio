@@ -224,7 +224,7 @@ const CinematicIntro: React.FC<{ onEnter?: () => void }> = ({ onEnter }) => {
           const step =
             Math.sign(pendingScroll) *
             Math.min(Math.abs(pendingScroll), maxRate * Math.min(rawDt, 0.25));
-          window.scrollBy(0, step);
+          window.scrollBy({ top: step, behavior: "instant" });
           pendingScroll -= step;
           if (Math.abs(pendingScroll) < 0.5) pendingScroll = 0;
           onScroll(); // pick up the new position this same frame
