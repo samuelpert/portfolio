@@ -53,16 +53,45 @@
   }
 }
 
-/* Cinematic intro (CinematicIntro.tsx) */
+/* Cinematic intro (CinematicIntro.tsx)
+ *
+ * The title glow pulses via OPACITY, not `text-shadow`. Animating text-shadow
+ * re-rasterizes the (viewport-wide, 8rem) headings on every frame — with three
+ * stacked shadows up to 130px blur that is one of the most expensive things on
+ * the page, and it ran the whole time the intro was on screen, stealing frames
+ * from the scroll. Instead the dim shadow is static (rasterized once, cached)
+ * and a `::before` copy carrying only the bright shadow cross-fades over it.
+ * Opacity is compositor-driven, so the pulse now costs effectively nothing.
+ */
+.introTitle {
+  text-shadow: 0 0 18px rgba(255, 120, 40, 0.55),
+    0 0 46px rgba(255, 80, 20, 0.4), 0 0 88px rgba(255, 55, 0, 0.26);
+}
+
+.introTitle::before {
+  content: attr(data-text);
+  position: absolute;
+  top: 0;
+  left: 0;
+  /* Match the parent's inset text so the two shadows register exactly.
+     (An abs-positioned pseudo is laid out against the padding box, so the
+     parent's padding-left has to be repeated here.) */
+  padding-left: inherit;
+  color: transparent;
+  text-shadow: 0 0 28px rgba(255, 150, 65, 0.78),
+    0 0 70px rgba(255, 95, 28, 0.56), 0 0 130px rgba(255, 60, 0, 0.4);
+  animation: glowPulse 4.5s ease-in-out infinite;
+  will-change: opacity;
+  pointer-events: none;
+}
+
 @keyframes glowPulse {
   0%,
   100% {
-    text-shadow: 0 0 18px rgba(255, 120, 40, 0.55),
-      0 0 46px rgba(255, 80, 20, 0.4), 0 0 88px rgba(255, 55, 0, 0.26);
+    opacity: 0;
   }
   50% {
-    text-shadow: 0 0 28px rgba(255, 150, 65, 0.78),
-      0 0 70px rgba(255, 95, 28, 0.56), 0 0 130px rgba(255, 60, 0, 0.4);
+    opacity: 1;
   }
 }
 

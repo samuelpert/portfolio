@@ -65,27 +65,41 @@ const CinematicIntro: React.FC<{ onEnter?: () => void }> = ({ onEnter }) => {
     // instead of being scroll-driven.
     let snapped = false;
 
+    // Cached section geometry. The section's offsetTop/offsetHeight only change
+    // on layout (resize), never on scroll — and `rect.top` is just
+    // `secTop - window.scrollY`. Measuring once per resize instead of calling
+    // getBoundingClientRect() in the wheel handler and twice more per frame
+    // removes a forced synchronous layout from every one of those calls. That
+    // matters most on trackpads, where Chrome fires wheel events faster than
+    // the frame rate.
+    let secTop = 0;
+    let secHeight = 0;
+    let vh = 0;
+
+    const measure = () => {
+      const sec = sectionRef.current;
+      if (!sec) return;
+      secTop = sec.offsetTop;
+      secHeight = sec.offsetHeight;
+      vh = window.innerHeight;
+    };
+
     const onMove = (e: MouseEvent) => {
       pointer.x = e.clientX / window.innerWidth - 0.5;
       pointer.y = e.clientY / window.innerHeight - 0.5;
     };
 
     const onScroll = () => {
-      const sec = sectionRef.current;
-      if (!sec) return;
-      const rect = sec.getBoundingClientRect();
-      const total = rect.height - window.innerHeight;
-      const scrolled = Math.min(Math.max(-rect.top, 0), total);
+      const total = secHeight - vh;
+      const scrolled = Math.min(Math.max(window.scrollY - secTop, 0), total);
       target = total > 0 ? scrolled / total : 0;
     };
 
     const onWheel = (e: WheelEvent) => {
       if (e.ctrlKey) return; // pinch-zoom, not scrolling
-      const sec = sectionRef.current;
-      if (!sec) return;
-      const rect = sec.getBoundingClientRect();
-      const total = rect.height - window.innerHeight;
-      const pinned = rect.top <= 0 && rect.bottom - window.innerHeight > 1;
+      const total = secHeight - vh;
+      const top = secTop - window.scrollY; // === rect.top, without the layout
+      const pinned = top <= 0 && top + secHeight - vh > 1;
       if (!pinned) {
         pendingScroll = 0;
         return;
@@ -94,16 +108,35 @@ const CinematicIntro: React.FC<{ onEnter?: () => void }> = ({ onEnter }) => {
       // Normalize deltaMode (0 = pixels, 1 = lines, 2 = pages).
       let dy = e.deltaY;
       if (e.deltaMode === 1) dy *= 16;
-      else if (e.deltaMode === 2) dy *= window.innerHeight;
+      else if (e.deltaMode === 2) dy *= vh;
       pendingScroll += dy;
       // Never queue more than what's left of the intro (either direction), so
       // momentum doesn't keep pushing after the handoff.
-      const scrolled = Math.min(Math.max(-rect.top, 0), total);
+      const scrolled = Math.min(Math.max(-top, 0), total);
       pendingScroll = Math.max(
         -scrolled - 10,
         Math.min(total - scrolled + 10, pendingScroll)
       );
     };
+
+    const onResize = () => {
+      measure();
+      onScroll();
+    };
+
+    // Last values actually written to the DOM. This loop runs for the life of
+    // the page, so once the intro is behind you `progress` is pinned at 1 and
+    // every frame would otherwise re-write the same handful of style strings
+    // forever — each write invalidating style for that element. Skipping no-op
+    // writes makes the post-intro loop essentially free.
+    let wTopT = "";
+    let wTopO = "";
+    let wBotT = "";
+    let wBotO = "";
+    let wHintO = "";
+    let wVeilO = "";
+    let wBlackO = "";
+    let wBlackTrans = "";
 
     const applyTransforms = () => {
       const p = progress;
@@ -116,22 +149,28 @@ const CinematicIntro: React.FC<{ onEnter?: () => void }> = ({ onEnter }) => {
       // so it stays sharp (no CSS upscaling of the canvas).
       const camEase = p * p;
       holeControl.current?.setCamera(camEase, ccx, ccy);
+      const titleOpacity = String(Math.max(0, 1 - p * 2.1));
+      const scale = 1 + p * 1.8;
+      const shiftX = ccx * 34;
       if (topRef.current) {
-        const s = 1 + p * 1.8;
         const ty = 15 - p * 55;
-        topRef.current.style.transform =
-          "translate(-50%, " + ty + "vh) translateX(" + ccx * 34 + "px) scale(" + s + ")";
-        topRef.current.style.opacity = String(Math.max(0, 1 - p * 2.1));
+        const t =
+          "translate(-50%, " + ty + "vh) translateX(" + shiftX + "px) scale(" + scale + ")";
+        if (t !== wTopT) topRef.current.style.transform = wTopT = t;
+        if (titleOpacity !== wTopO)
+          topRef.current.style.opacity = wTopO = titleOpacity;
       }
       if (botRef.current) {
-        const s = 1 + p * 1.8;
         const ty = 76 + p * 52;
-        botRef.current.style.transform =
-          "translate(-50%, " + ty + "vh) translateX(" + ccx * 34 + "px) scale(" + s + ")";
-        botRef.current.style.opacity = String(Math.max(0, 1 - p * 2.1));
+        const t =
+          "translate(-50%, " + ty + "vh) translateX(" + shiftX + "px) scale(" + scale + ")";
+        if (t !== wBotT) botRef.current.style.transform = wBotT = t;
+        if (titleOpacity !== wBotO)
+          botRef.current.style.opacity = wBotO = titleOpacity;
       }
       if (hintRef.current) {
-        hintRef.current.style.opacity = String(Math.max(0, 1 - p * 5));
+        const o = String(Math.max(0, 1 - p * 5));
+        if (o !== wHintO) hintRef.current.style.opacity = wHintO = o;
       }
 
       // "Past the event horizon": a warm void glows in as we plunge (0.5→0.82),
@@ -140,9 +179,8 @@ const CinematicIntro: React.FC<{ onEnter?: () => void }> = ({ onEnter }) => {
       // sticky intro hands off to the scrolling page with no visible seam (the
       // Hero just emerges from the dark, like the prototype's fade-in).
       if (veilRef.current) {
-        veilRef.current.style.opacity = String(
-          Math.max(0, Math.min(1, (p - 0.5) / 0.32))
-        );
+        const o = String(Math.max(0, Math.min(1, (p - 0.5) / 0.32)));
+        if (o !== wVeilO) veilRef.current.style.opacity = wVeilO = o;
       }
       // The blackout is floored by the RAW scroll position, not just the
       // smoothed progress: on a fast flick the smoothed value lags, and the
@@ -155,8 +193,9 @@ const CinematicIntro: React.FC<{ onEnter?: () => void }> = ({ onEnter }) => {
       );
       const bo = blackoutRef.current;
       if (bo && !snapped) {
-        bo.style.transition = "none";
-        bo.style.opacity = String(black);
+        if (wBlackTrans !== "none") bo.style.transition = wBlackTrans = "none";
+        const o = String(black);
+        if (o !== wBlackO) bo.style.opacity = wBlackO = o;
       }
 
       // The zoom handoff: once the screen is fully black and the intro is
@@ -166,16 +205,13 @@ const CinematicIntro: React.FC<{ onEnter?: () => void }> = ({ onEnter }) => {
       // in place, continuing the fall-in zoom.
       if (!snapped && target >= 0.999 && black >= 1) {
         snapped = true;
-        const sec = sectionRef.current;
-        if (sec) {
-          const siteTop = sec.offsetTop + sec.offsetHeight;
-          if (window.scrollY < siteTop) {
-            window.scrollTo({ top: siteTop, behavior: "instant" });
-          }
+        const siteTop = secTop + secHeight;
+        if (window.scrollY < siteTop) {
+          window.scrollTo({ top: siteTop, behavior: "instant" });
         }
         if (bo) {
-          bo.style.transition = "opacity 1s ease";
-          bo.style.opacity = "0";
+          bo.style.transition = wBlackTrans = "opacity 1s ease";
+          bo.style.opacity = wBlackO = "0";
         }
         if (!enteredFired) {
           enteredFired = true;
@@ -217,9 +253,8 @@ const CinematicIntro: React.FC<{ onEnter?: () => void }> = ({ onEnter }) => {
       // Uses wall-clock dt (not the smoothing-capped one) so dropped frames
       // don't slow the drain below the intended pace.
       if (pendingScroll !== 0) {
-        const sec = sectionRef.current;
-        if (sec) {
-          const total = sec.getBoundingClientRect().height - window.innerHeight;
+        const total = secHeight - vh;
+        if (total > 0) {
           const maxRate = total / MIN_INTRO_SECONDS; // px per second
           const step =
             Math.sign(pendingScroll) *
@@ -227,7 +262,13 @@ const CinematicIntro: React.FC<{ onEnter?: () => void }> = ({ onEnter }) => {
           window.scrollBy({ top: step, behavior: "instant" });
           pendingScroll -= step;
           if (Math.abs(pendingScroll) < 0.5) pendingScroll = 0;
-          onScroll(); // pick up the new position this same frame
+          // Pick up the new position this same frame. Now that onScroll reads
+          // only window.scrollY against cached geometry, this no longer forces
+          // a layout right after the scroll write — the frame is a clean
+          // read-then-write instead of read/write/read/write.
+          onScroll();
+        } else {
+          pendingScroll = 0;
         }
       }
 
@@ -251,6 +292,7 @@ const CinematicIntro: React.FC<{ onEnter?: () => void }> = ({ onEnter }) => {
       raf = requestAnimationFrame(loop);
     };
 
+    measure();
     onScroll();
     // Page loaded (or refreshed) already past the intro: skip the transition
     // entirely — no blackout, no snap, respect the restored scroll position.
@@ -262,6 +304,7 @@ const CinematicIntro: React.FC<{ onEnter?: () => void }> = ({ onEnter }) => {
     }
     window.addEventListener("mousemove", onMove, { passive: true });
     window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onResize);
     // Must be non-passive: the intro consumes wheel input while pinned.
     window.addEventListener("wheel", onWheel, { passive: false });
     raf = requestAnimationFrame(loop);
@@ -270,6 +313,7 @@ const CinematicIntro: React.FC<{ onEnter?: () => void }> = ({ onEnter }) => {
       cancelAnimationFrame(raf);
       window.removeEventListener("mousemove", onMove);
       window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onResize);
       window.removeEventListener("wheel", onWheel);
     };
   }, []);
@@ -288,7 +332,8 @@ const CinematicIntro: React.FC<{ onEnter?: () => void }> = ({ onEnter }) => {
     whiteSpace: "nowrap",
     paddingLeft: "0.45em",
     willChange: "transform, opacity",
-    animation: "glowPulse 4.5s ease-in-out infinite",
+    // The glow pulse lives on `.introTitle::before` (see globals.css) so it
+    // animates opacity instead of text-shadow.
   };
 
   return (
@@ -308,6 +353,9 @@ const CinematicIntro: React.FC<{ onEnter?: () => void }> = ({ onEnter }) => {
           opacity: 0,
           pointerEvents: "none",
           background: "#000",
+          // Promote: its opacity is written every frame during the plunge, and
+          // an unpromoted full-viewport layer repaints on each change.
+          willChange: "opacity",
         }}
       />
       <section ref={sectionRef} style={{ position: "relative", height: "300vh" }}>
@@ -347,13 +395,25 @@ const CinematicIntro: React.FC<{ onEnter?: () => void }> = ({ onEnter }) => {
             pointerEvents: "none",
             background:
               "radial-gradient(80% 70% at 50% 50%, rgba(20,6,2,.5) 0%, rgba(0,0,0,.96) 76%)",
+            // Same as the blackout: full-viewport, opacity animated per frame.
+            willChange: "opacity",
           }}
         />
 
-        <h1 ref={topRef} className={exo2.className} style={{ ...titleStyle, transform: "translate(-50%, 15vh)" }}>
+        <h1
+          ref={topRef}
+          className={`${exo2.className} introTitle`}
+          data-text="SAMUEL'S"
+          style={{ ...titleStyle, transform: "translate(-50%, 15vh)" }}
+        >
           SAMUEL&apos;S
         </h1>
-        <h1 ref={botRef} className={exo2.className} style={{ ...titleStyle, transform: "translate(-50%, 76vh)" }}>
+        <h1
+          ref={botRef}
+          className={`${exo2.className} introTitle`}
+          data-text="SPACE"
+          style={{ ...titleStyle, transform: "translate(-50%, 76vh)" }}
+        >
           SPACE
         </h1>
 
