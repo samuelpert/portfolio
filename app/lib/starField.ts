@@ -1,20 +1,16 @@
 /**
- * starField — the star simulation behind the cinematic intro.
+ * starField — the fly-through starfield behind the black hole.
  *
- * A single set of stars and a single animation loop are owned here. A canvas
- * registers via `registerStarCanvas`; each frame the loop advances the stars
- * and draws them. In practice the only canvas is the one inside the intro,
- * sitting behind the WebGPU black hole so the disc's `mix-blend-screen` has
- * real stars to composite over. (It still supports multiple canvases — they'd
- * all show the identical frame — but there is intentionally no starfield behind
- * the portfolio: once you've fallen in, the content scrolls, not the stars.)
+ * Stars live only in the intro: the canvas sits behind the WebGPU raymarcher so
+ * the disc's `mix-blend-screen` has something real to composite over, and it
+ * fades out with the plunge. Once you've fallen in, the content scrolls — there
+ * is intentionally nothing animating behind the page.
  *
- * The warp is driven by `starFlow.progress` (the intro's fall-in).
+ * Depth travelled is a linear function of the intro's scroll progress, so the
+ * warp is driven entirely by how fast you scroll: hold still and the stars only
+ * drift, flick and they streak.
  */
-import { starFlow, SPREAD } from "./starFlow";
-
-const STAR_COUNT = 820;
-const WARP = 2.0; // how hard page scrolling streaks the stars after the intro
+import { clamp, SPREAD } from "@/app/components/singularity/engine";
 
 interface Star {
   x: number;
@@ -22,161 +18,122 @@ interface Star {
   z: number;
 }
 
-const contexts = new Map<HTMLCanvasElement, CanvasRenderingContext2D>();
-let stars: Star[] | null = null;
-let raf = 0;
-let listening = false;
+export interface StarFieldOptions {
+  /** Number of stars. Phones and reduced-motion get fewer. */
+  count: number;
+  /** Scales how hard scrolling streaks the stars (the motionIntensity slider). */
+  intensity: number;
+  reduced: boolean;
+}
 
-let w = 0;
-let h = 0;
-let cx = 0;
-let cy = 0;
-const pointer = { x: 0, y: 0 };
-const cam = { x: 0, y: 0 };
-let lastFlow: number | null = null;
-let releaseScrollY = 0;
+export interface StarField {
+  /** Advance and draw one frame. `progress` is the intro's 0 → 1 fall-in. */
+  draw(progress: number, camX: number, camY: number): void;
+  dispose(): void;
+}
 
-const ensureStars = () => {
-  if (stars) return;
-  stars = Array.from({ length: STAR_COUNT }, () => ({
+export const createStarField = (
+  canvas: HTMLCanvasElement,
+  { count, intensity, reduced }: StarFieldOptions
+): StarField | null => {
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return null;
+
+  const stars: Star[] = Array.from({ length: count }, () => ({
     x: Math.random() * 2 - 1,
     y: Math.random() * 2 - 1,
     z: 0.25 + Math.random() * 0.75,
   }));
-};
 
-const sizeCanvas = (canvas: HTMLCanvasElement) => {
-  const dpr = Math.min(2, window.devicePixelRatio || 1);
-  canvas.width = w * dpr;
-  canvas.height = h * dpr;
-  const ctx = contexts.get(canvas);
-  ctx?.setTransform(dpr, 0, 0, dpr, 0, 0);
-};
+  let w = 0;
+  let h = 0;
+  let lastFlow: number | null = null;
 
-const onResize = () => {
-  w = window.innerWidth;
-  h = window.innerHeight;
-  cx = w / 2;
-  cy = h / 2;
-  contexts.forEach((_ctx, canvas) => sizeCanvas(canvas));
-};
+  // A ResizeObserver rather than reading clientWidth per frame: the draw runs
+  // right after the scroll handler has written styles, so a size read there
+  // would force a synchronous layout on every single frame of the plunge.
+  const resize = () => {
+    const cw = canvas.clientWidth;
+    const ch = canvas.clientHeight;
+    if (!cw || !ch || (cw === w && ch === h)) return;
+    w = cw;
+    h = ch;
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    canvas.width = Math.round(w * dpr);
+    canvas.height = Math.round(h * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  };
 
-const onMove = (e: MouseEvent) => {
-  pointer.x = e.clientX / window.innerWidth - 0.5;
-  pointer.y = e.clientY / window.innerHeight - 0.5;
-};
+  const ro = new ResizeObserver(resize);
+  ro.observe(canvas);
+  resize();
 
-const draw = () => {
-  cam.x += (pointer.x - cam.x) * 0.045;
-  cam.y += (pointer.y - cam.y) * 0.045;
+  return {
+    draw(progress, camX, camY) {
+      if (!w || !h) return;
+      ctx.clearRect(0, 0, w, h);
+      ctx.fillStyle = "#05070c";
+      ctx.fillRect(0, 0, w, h);
 
-  // Depth travelled is a LINEAR function of intro progress (the tuned fall-in);
-  // once we've fallen in, the portfolio adds gentle scroll-velocity warp on top
-  // of the SPREAD baseline so the seam stays continuous.
-  const p = starFlow.progress;
-  let flow: number;
-  if (p < 0.999) {
-    flow = p * SPREAD;
-    releaseScrollY = window.scrollY; // anchor for the post-intro warp
-  } else {
-    flow =
-      SPREAD + ((window.scrollY - releaseScrollY) / window.innerHeight) * WARP;
-  }
-  let dScroll = flow - (lastFlow == null ? flow : lastFlow);
-  lastFlow = flow;
-  dScroll = Math.max(-0.5, Math.min(0.5, dScroll));
-  const delta = 0.0016 + dScroll; // idle drift + scroll-driven advance
-  const warp = Math.abs(dScroll) > 0.004;
+      const flow = progress * SPREAD;
+      let dScroll = flow - (lastFlow == null ? flow : lastFlow);
+      lastFlow = flow;
+      dScroll = clamp(dScroll, -0.5, 0.5) * intensity;
+      const delta = (reduced ? 0.0006 : 0.0016) + dScroll; // idle drift + scroll
+      const warp = !reduced && Math.abs(dScroll) > 0.004;
 
-  const ctxs = Array.from(contexts.values());
-  for (const ctx of ctxs) ctx.clearRect(0, 0, w, h);
+      const cx = w / 2;
+      const cy = h / 2;
+      const focal = Math.max(w, h) * 0.52;
+      const px = camX * 0.55;
+      const py = camY * 0.55;
 
-  const focal = Math.max(w, h) * 0.52;
-  const px = cam.x * 0.55;
-  const py = cam.y * 0.55;
-  const list = stars!;
+      for (const s of stars) {
+        const pz = s.z;
+        s.z -= delta;
+        let recycled = false;
+        if (s.z <= 0.02) {
+          s.z += 1;
+          s.x = Math.random() * 2 - 1;
+          s.y = Math.random() * 2 - 1;
+          recycled = true;
+        } else if (s.z > 1) {
+          s.z -= 1;
+          s.x = Math.random() * 2 - 1;
+          s.y = Math.random() * 2 - 1;
+          recycled = true;
+        }
 
-  for (let i = 0; i < list.length; i++) {
-    const s = list[i];
-    const pz = s.z;
-    s.z -= delta;
-    let recycled = false;
-    if (s.z <= 0.02) {
-      s.z += 1;
-      s.x = Math.random() * 2 - 1;
-      s.y = Math.random() * 2 - 1;
-      recycled = true;
-    } else if (s.z > 1.0) {
-      s.z -= 1;
-      s.x = Math.random() * 2 - 1;
-      s.y = Math.random() * 2 - 1;
-      recycled = true;
-    }
+        const sx = cx + ((s.x + px) / s.z) * focal;
+        const sy = cy + ((s.y + py) / s.z) * focal;
+        if (sx < -60 || sx > w + 60 || sy < -60 || sy > h + 60) continue;
 
-    const sx = cx + ((s.x + px) / s.z) * focal;
-    const syy = cy + ((s.y + py) / s.z) * focal;
-    if (sx < -60 || sx > w + 60 || syy < -60 || syy > h + 60) continue;
-    const depth = 1 - s.z;
-    const size = depth * 2.3 + 0.5;
-    const alpha = Math.min(1, 0.3 + depth * 1.1);
+        const depth = 1 - s.z;
+        const size = depth * 2.3 + 0.5;
+        const alpha = Math.min(1, 0.3 + depth * 1.1);
 
-    if (warp && !recycled) {
-      const ox = cx + ((s.x + px) / pz) * focal;
-      const oy = cy + ((s.y + py) / pz) * focal;
-      const stroke = "rgba(255,238,224," + alpha + ")";
-      for (const ctx of ctxs) {
-        ctx.strokeStyle = stroke;
-        ctx.lineWidth = size;
-        ctx.lineCap = "round";
-        ctx.beginPath();
-        ctx.moveTo(ox, oy);
-        ctx.lineTo(sx, syy);
-        ctx.stroke();
+        // Streak from where the star was to where it is: the same star drawn as
+        // a line instead of a dot is what reads as warp speed.
+        if (warp && !recycled) {
+          const ox = cx + ((s.x + px) / pz) * focal;
+          const oy = cy + ((s.y + py) / pz) * focal;
+          ctx.strokeStyle = "rgba(255,238,224," + alpha + ")";
+          ctx.lineWidth = size;
+          ctx.lineCap = "round";
+          ctx.beginPath();
+          ctx.moveTo(ox, oy);
+          ctx.lineTo(sx, sy);
+          ctx.stroke();
+        } else {
+          ctx.fillStyle = "rgba(255,245,235," + alpha + ")";
+          ctx.beginPath();
+          ctx.arc(sx, sy, size, 0, 6.2832);
+          ctx.fill();
+        }
       }
-    } else {
-      const fill = "rgba(255,245,235," + alpha + ")";
-      for (const ctx of ctxs) {
-        ctx.fillStyle = fill;
-        ctx.beginPath();
-        ctx.arc(sx, syy, size, 0, 6.2832);
-        ctx.fill();
-      }
-    }
-  }
-
-  raf = requestAnimationFrame(draw);
-};
-
-/**
- * Register a full-viewport canvas to receive the shared starfield. Returns an
- * unregister function (call it on unmount). The loop and window listeners spin
- * up on the first canvas and tear down when the last one leaves.
- */
-export const registerStarCanvas = (canvas: HTMLCanvasElement): (() => void) => {
-  const ctx = canvas.getContext("2d");
-  if (!ctx) return () => {};
-  ensureStars();
-  contexts.set(canvas, ctx);
-
-  if (!listening) {
-    listening = true;
-    onResize();
-    window.addEventListener("resize", onResize);
-    window.addEventListener("mousemove", onMove, { passive: true });
-    raf = requestAnimationFrame(draw);
-  } else {
-    sizeCanvas(canvas); // match the already-known viewport size
-  }
-
-  return () => {
-    contexts.delete(canvas);
-    if (contexts.size === 0) {
-      cancelAnimationFrame(raf);
-      raf = 0;
-      window.removeEventListener("resize", onResize);
-      window.removeEventListener("mousemove", onMove);
-      listening = false;
-      lastFlow = null;
-    }
+    },
+    dispose() {
+      ro.disconnect();
+    },
   };
 };

@@ -1,14 +1,25 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Space_Grotesk, JetBrains_Mono } from "next/font/google";
 import GoogleAnalytics from "@/app/components/GoogleAnalytics";
 import { Suspense } from "react";
 import { SpeedInsights } from "@vercel/speed-insights/next"
 import { Analytics } from "@vercel/analytics/next"
 
 import "./globals.css";
+import "./singularity.css";
 
-const inter = Inter({
+// Space Grotesk sets the whole page; JetBrains Mono is the telemetry face —
+// the stage bar, chapter eyebrows and every readout in the HUD.
+const grotesk = Space_Grotesk({
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-grotesk",
+});
+
+const jetbrains = JetBrains_Mono({
+  subsets: ["latin"],
+  weight: ["400", "500"],
+  variable: "--font-mono",
 });
 
 export const metadata: Metadata = {
@@ -50,7 +61,10 @@ export default function RootLayout({
     // hydrates, which otherwise trips a hydration mismatch. This only tolerates
     // attribute diffs on these root elements — it does not affect the app UI.
     <html lang="en" suppressHydrationWarning>
-      <body className={`${inter.className}`} suppressHydrationWarning>
+      <body
+        className={`${grotesk.variable} ${jetbrains.variable}`}
+        suppressHydrationWarning
+      >
         {children}
         <SpeedInsights />
         <Analytics />

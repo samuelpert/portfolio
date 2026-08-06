@@ -1,0 +1,1323 @@
+/* =============================================================================
+ * Singularity scroll — the whole page.
+ *
+ * Layout is written desktop-first from the "Singularity Desktop" mockup; the
+ * `max-width: 767px` block at the bottom of each section swaps in the phone
+ * mockup (1a). The one value the JS and the CSS share is `--p`, the intro's
+ * scroll progress (0 → 1): the controller writes it on `.sg-root` once per
+ * frame and everything in the intro derives its transform/opacity from it, so
+ * the plunge costs a single style write instead of one per element.
+ * ========================================================================== */
+
+.sg-root {
+  --p: 0;
+
+  --sg-bg: #05070c;
+  --sg-fg: #e8e6e1;
+  --sg-card: #0c1119;
+  --sg-gold: oklch(0.82 0.13 72);
+  --sg-gold-bright: oklch(0.88 0.11 76);
+  --sg-blue: oklch(0.78 0.12 232);
+  --sg-dim: rgba(232, 230, 225, 0.62);
+  --sg-faint: rgba(232, 230, 225, 0.45);
+  --sg-hairline: rgba(255, 255, 255, 0.14);
+
+  position: relative;
+  background: var(--sg-bg);
+  color: var(--sg-fg);
+  overflow-x: clip;
+}
+
+.sg-root a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.sg-mono {
+  font-family: var(--font-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.sg-sub {
+  font-size: 7px;
+}
+
+/* The snap-to-site handoff: opaque before the jump, then fades out on its own
+ * transition. Fixed (not inside the sticky intro) so it keeps covering the
+ * screen through the scroll jump. */
+.sg-blackout {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: #000;
+  opacity: 0;
+  pointer-events: none;
+  will-change: opacity;
+}
+
+/* --- Intro ---------------------------------------------------------------- */
+
+.sg-intro {
+  position: relative;
+  height: 380vh;
+}
+
+.sg-intro-pin {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* Star warp. Fades out over the last of the plunge so the hero lands on flat
+ * black rather than on a starfield. */
+.sg-intro-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  opacity: calc(1 - max(0, var(--p) - 0.82) * 6);
+}
+
+/* The WebGPU raymarcher screens over the stars behind it. */
+.sg-intro-gpu {
+  position: absolute;
+  inset: 0;
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
+
+.sg-intro-vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    120% 90% at 50% 50%,
+    transparent 30%,
+    rgba(5, 7, 12, 0.55) 78%,
+    #05070c 100%
+  );
+}
+
+/* Past the event horizon: a warm void glows in over the second half of the
+ * plunge, so the blackout has something to land on. */
+.sg-intro-veil {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    80% 70% at 50% 50%,
+    rgba(20, 6, 2, 0.5) 0%,
+    #05070c 82%
+  );
+  opacity: calc(max(0, var(--p) - 0.5) * 2.1);
+}
+
+.sg-intro-titles {
+  position: absolute;
+  inset: 0;
+  padding: 0 28px;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.sg-title {
+  margin: 0;
+  font-size: clamp(48px, 10.5vw, 150px);
+  font-weight: 600;
+  line-height: 0.9;
+  letter-spacing: 0.02em;
+  color: #fff;
+  text-shadow: 0 0 18px oklch(0.82 0.13 72 / 0.5),
+    0 0 46px oklch(0.78 0.14 62 / 0.34), 0 0 88px oklch(0.72 0.16 48 / 0.22);
+}
+
+/* The glow pulses via OPACITY on a shadow-only copy, never by animating
+ * text-shadow: re-rasterizing a 150px heading with three shadows up to 130px
+ * blur, every frame, for the whole intro, is one of the most expensive things
+ * this page could do. The dim shadow above is static (rasterized once); this
+ * copy carries only the bright one and cross-fades over it on the compositor. */
+.sg-title::before {
+  content: attr(data-text);
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  color: transparent;
+  text-shadow: 0 0 26px oklch(0.88 0.12 76 / 0.75),
+    0 0 66px oklch(0.82 0.14 62 / 0.5), 0 0 126px oklch(0.74 0.16 46 / 0.36);
+  animation: sgGlow 4.5s ease-in-out infinite;
+  will-change: opacity;
+  pointer-events: none;
+}
+
+/* Both words fly past the camera as you fall — quadratic in `--p`, so they
+ * hang still at the start and streak off screen at the end. */
+.sg-title-top {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 9%;
+  text-align: center;
+  transform: translateY(calc(var(--p) * var(--p) * -110vh))
+    scale(calc(1 + var(--p) * var(--p) * 5));
+  will-change: transform;
+}
+
+.sg-title-bottom-wrap {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: max(17%, 168px);
+  text-align: center;
+  transform: translateY(calc(var(--p) * var(--p) * 110vh))
+    scale(calc(1 + var(--p) * var(--p) * 5));
+  will-change: transform;
+}
+
+.sg-title-bottom {
+  position: relative;
+  display: inline-block;
+}
+
+.sg-hint {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 92px;
+  display: grid;
+  place-items: center;
+  opacity: calc(1 - var(--p) * 6);
+  pointer-events: none;
+}
+
+.sg-hint-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 9px;
+  animation: sgHintBob 2.6s ease-in-out infinite;
+}
+
+.sg-hint-label {
+  font-size: 10px;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: rgba(232, 230, 225, 0.6);
+}
+
+.sg-intro-readout {
+  position: absolute;
+  left: 28px;
+  bottom: 76px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 9.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(232, 230, 225, 0.4);
+  font-variant-numeric: tabular-nums;
+  opacity: calc(1 - var(--p) * 3);
+  pointer-events: none;
+}
+
+.sg-intro-readout b {
+  color: var(--sg-gold);
+  font-weight: inherit;
+}
+
+/* --- Shared chapter furniture --------------------------------------------- */
+
+.sg-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--sg-gold);
+}
+
+.sg-eyebrow::before {
+  content: "";
+  flex: none;
+  width: 44px;
+  height: 1px;
+  background: currentColor;
+}
+
+.sg-eyebrow-blue {
+  color: var(--sg-blue);
+}
+
+.sg-h2 {
+  margin: 0;
+  font-size: clamp(30px, 4vw, 50px);
+  font-weight: 600;
+  letter-spacing: -0.028em;
+  line-height: 1.05;
+}
+
+.sg-accent {
+  color: var(--sg-gold);
+}
+
+.sg-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 48px;
+  padding: 0 26px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background 0.25s ease, border-color 0.25s ease,
+    box-shadow 0.25s ease, color 0.25s ease;
+}
+
+.sg-btn-primary {
+  border-color: var(--sg-gold);
+  background: var(--sg-card);
+}
+
+.sg-btn-primary:hover {
+  background: #111826;
+  box-shadow: 0 0 26px -8px oklch(0.82 0.13 72 / 0.7);
+}
+
+.sg-btn-ghost {
+  border-color: rgba(255, 255, 255, 0.18);
+  background: transparent;
+}
+
+.sg-btn-ghost:hover {
+  border-color: var(--sg-gold);
+  color: var(--sg-gold);
+}
+
+.sg-grid-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22 width=%2232%22 height=%2232%22 fill=%22none%22 stroke=%22rgba(255,255,255,0.1)%22%3E%3Cpath d=%22M0 .5H31.5V32%22/%3E%3C/svg%3E");
+  mask-image: radial-gradient(ellipse at center, black 5%, transparent 70%);
+  -webkit-mask-image: radial-gradient(ellipse at center, black 5%, transparent 70%);
+}
+
+/* --- 01 Event horizon (hero) ---------------------------------------------- */
+
+.sg-ch1 {
+  position: relative;
+  height: 200vh;
+}
+
+/* Pinned: the headline is revealed word by word BY the scroll through this
+ * chapter, so a fast scroller rides the reveal instead of skipping it. */
+.sg-ch1-pin {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  display: grid;
+  align-content: center;
+  padding: 96px 40px 120px;
+  overflow: hidden;
+}
+
+.sg-hero {
+  position: relative;
+  max-width: 1180px;
+  margin: 0 auto;
+  width: 100%;
+  opacity: 0;
+  transform: scale(0.3);
+  will-change: transform, opacity;
+}
+
+.sg-hero-eyebrow {
+  margin-bottom: 28px;
+}
+
+.sg-hero-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(0, 0.8fr);
+  gap: 60px;
+  align-items: center;
+}
+
+.sg-hero-h1 {
+  margin: 0;
+  font-size: clamp(40px, 6vw, 78px);
+  font-weight: 600;
+  line-height: 1.03;
+  letter-spacing: -0.032em;
+  text-wrap: balance;
+}
+
+.sg-word {
+  display: inline-block;
+  will-change: transform, opacity;
+}
+
+.sg-hero-p {
+  margin: 22px 0 0;
+  font-size: 18px;
+  line-height: 1.65;
+  color: var(--sg-dim);
+  max-width: 56ch;
+  text-wrap: pretty;
+}
+
+.sg-hero-actions {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-top: 30px;
+}
+
+.sg-chips {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 24px;
+  font-size: 9.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.sg-chip {
+  padding: 7px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--sg-hairline);
+  color: rgba(232, 230, 225, 0.6);
+}
+
+.sg-chip-gold {
+  border-color: oklch(0.82 0.13 72 / 0.4);
+  color: var(--sg-gold);
+}
+
+.sg-portrait {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 1px solid oklch(0.82 0.13 72 / 0.3);
+  background: var(--sg-card);
+  box-shadow: 0 0 80px -24px oklch(0.82 0.13 72 / 0.5);
+}
+
+.sg-portrait img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 12%;
+  filter: grayscale(0.15) contrast(1.04);
+}
+
+.sg-portrait::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle at 50% 118%,
+    oklch(0.82 0.13 72 / 0.3),
+    transparent 62%
+  );
+}
+
+/* --- 02 Accretion disk (projects) ----------------------------------------- */
+
+.sg-ch2 {
+  position: relative;
+  min-height: 420vh;
+  padding: 0 40px;
+}
+
+.sg-ch2-pin {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 48px 0 86px;
+}
+
+.sg-ch2-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
+  flex: none;
+}
+
+.sg-ch2-head .sg-eyebrow {
+  margin-bottom: 16px;
+}
+
+.sg-ch2-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  font-size: 9.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: rgba(232, 230, 225, 0.5);
+}
+
+.sg-count {
+  color: var(--sg-gold);
+  font-size: 13px;
+}
+
+.sg-ch2-phase {
+  color: rgba(232, 230, 225, 0.4);
+}
+
+/* The cards are absolutely positioned inside this box and driven entirely from
+ * JS (deck sweep → mosaic), so the stage just has to be a known-size frame. */
+.sg-stage {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+}
+
+.sg-card {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--sg-hairline);
+  border-radius: 18px;
+  overflow: hidden;
+  background: var(--sg-card);
+  opacity: 0;
+  will-change: transform, opacity;
+  box-shadow: 0 40px 90px -50px rgba(0, 0, 0, 0.9);
+  transition: border-color 0.3s ease;
+}
+
+.sg-card:hover {
+  border-color: oklch(0.82 0.13 72 / 0.6);
+}
+
+.sg-card-media {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.sg-card-media img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.sg-card-scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    0deg,
+    rgba(12, 17, 25, 0.92) 0%,
+    rgba(12, 17, 25, 0.15) 46%,
+    transparent 100%
+  );
+}
+
+.sg-card-tag {
+  position: absolute;
+  top: 14px;
+  left: 16px;
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--sg-gold-bright);
+  padding: 5px 9px;
+  border-radius: 5px;
+  background: rgba(5, 7, 12, 0.6);
+  backdrop-filter: blur(6px);
+}
+
+.sg-card-body {
+  flex: none;
+  padding: 16px 18px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.sg-card-title {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: -0.018em;
+}
+
+.sg-card-desc {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--sg-dim);
+  overflow: hidden;
+}
+
+.sg-card-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 2px;
+}
+
+.sg-icons {
+  display: flex;
+  align-items: center;
+}
+
+.sg-icon {
+  width: 32px;
+  height: 32px;
+  margin-left: -7px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: var(--sg-bg);
+  display: grid;
+  place-items: center;
+}
+
+.sg-icon img {
+  width: 17px;
+  height: 17px;
+  object-fit: contain;
+}
+
+.sg-card-live {
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--sg-gold);
+}
+
+/* --- 03 Time dilation (timeline) ------------------------------------------ */
+
+.sg-ch3 {
+  position: relative;
+  padding: 120px 40px 100px;
+}
+
+.sg-ch3-inner {
+  max-width: 1060px;
+  margin: 0 auto;
+}
+
+.sg-ch3 .sg-eyebrow {
+  margin-bottom: 16px;
+}
+
+.sg-ch3-note {
+  margin: 12px 0 0;
+  font-size: 15px;
+  color: rgba(232, 230, 225, 0.6);
+  max-width: 58ch;
+}
+
+.sg-track {
+  position: relative;
+  margin-top: 40px;
+  padding-left: 36px;
+}
+
+.sg-track-rail,
+.sg-track-fill {
+  position: absolute;
+  left: 11px;
+  top: 8px;
+  width: 2px;
+  border-radius: 2px;
+}
+
+.sg-track-rail {
+  bottom: 8px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.sg-track-fill {
+  height: 0;
+  background: linear-gradient(180deg, transparent, var(--sg-gold));
+}
+
+.sg-comet {
+  position: absolute;
+  left: 12px;
+  top: 8px;
+  width: 14px;
+  height: 14px;
+  margin-left: -7px;
+  margin-top: -7px;
+  border-radius: 50%;
+  background: oklch(0.92 0.1 78);
+  box-shadow: 0 0 18px 5px oklch(0.82 0.13 72 / 0.8),
+    0 0 48px 12px oklch(0.82 0.13 72 / 0.3);
+}
+
+.sg-tl-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.sg-tl {
+  position: relative;
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  gap: 24px;
+  padding: 0 0 34px;
+  opacity: 0.28;
+  transform: translateY(10px);
+  transition: opacity 0.5s ease, transform 0.6s ease;
+}
+
+.sg-tl-dot {
+  position: absolute;
+  left: -31px;
+  top: 7px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 1.5px solid var(--sg-gold);
+  background: var(--sg-bg);
+  transition: background 0.4s ease, box-shadow 0.4s ease;
+}
+
+.sg-tl-when {
+  font-size: 9.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--sg-gold);
+  padding-top: 5px;
+}
+
+.sg-tl-body {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.sg-tl-body h3 {
+  margin: 0;
+  font-size: 18.5px;
+  font-weight: 600;
+  letter-spacing: -0.018em;
+  transition: color 0.3s ease;
+}
+
+.sg-tl-body p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: rgba(232, 230, 225, 0.6);
+  max-width: 66ch;
+}
+
+/* --- 04 Singularity (contact) --------------------------------------------- */
+
+.sg-ch4 {
+  position: relative;
+  min-height: 100vh;
+  display: grid;
+  place-content: center;
+  text-align: center;
+  padding: 80px 40px 170px;
+  overflow: hidden;
+}
+
+.sg-ch4-grid {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 118%;
+  max-width: none;
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+.sg-reveal {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  opacity: 0;
+  transform: translateY(26px);
+  transition: opacity 0.7s ease, transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.sg-ch4-eyebrow {
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--sg-gold);
+}
+
+.sg-ch4-h2 {
+  margin: 0;
+  font-size: clamp(32px, 4.8vw, 62px);
+  font-weight: 600;
+  letter-spacing: -0.032em;
+  line-height: 1.06;
+  max-width: 21ch;
+  text-wrap: balance;
+}
+
+.sg-ch4-p {
+  margin: 0;
+  font-size: 17px;
+  color: var(--sg-dim);
+  max-width: 52ch;
+}
+
+.sg-socials {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 6px;
+}
+
+.sg-social {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  border: 1px solid var(--sg-hairline);
+  background: rgba(12, 17, 25, 0.7);
+  display: grid;
+  place-items: center;
+  transition: border-color 0.25s ease;
+}
+
+.sg-social:hover {
+  border-color: var(--sg-gold);
+}
+
+.sg-copyright {
+  font-size: 12px;
+  color: var(--sg-faint);
+  margin-top: 14px;
+}
+
+/* --- Stage bar ------------------------------------------------------------ */
+
+.sg-hud {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 30;
+  background: linear-gradient(180deg, rgba(5, 7, 12, 0), rgba(5, 7, 12, 0.94) 42%);
+  backdrop-filter: blur(10px);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 14px 40px 15px;
+  display: flex;
+  align-items: center;
+  gap: 26px;
+}
+
+.sg-hud-stages {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  min-width: 0;
+}
+
+.sg-stage-link {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  min-width: 0;
+  font-size: 9.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--sg-faint);
+}
+
+.sg-stage-bar {
+  display: block;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.sg-stage-fill {
+  display: block;
+  height: 100%;
+  width: 0%;
+  background: var(--sg-gold);
+}
+
+.sg-stage-fill-blue {
+  background: var(--sg-blue);
+}
+
+.sg-hud-read,
+.sg-hud-metrics {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.sg-hud-read {
+  flex: none;
+  font-size: 9.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(232, 230, 225, 0.42);
+  font-variant-numeric: tabular-nums;
+}
+
+.sg-hud-phase {
+  color: var(--sg-gold);
+}
+
+.sg-hud-r {
+  color: var(--sg-gold);
+}
+
+.sg-hud-tau {
+  color: var(--sg-blue);
+}
+
+.sg-label-short {
+  display: none;
+}
+
+@keyframes sgGlow {
+  0%,
+  100% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes sgHintBob {
+  0%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.5;
+  }
+  50% {
+    transform: translateY(8px);
+    opacity: 1;
+  }
+}
+
+/* =============================================================================
+ * Phone (mockup 1a). Section heights are the mockup's pixel values divided by
+ * its 874px viewport, so the same number of screens of scroll drives each
+ * chapter on any phone.
+ * ========================================================================== */
+
+@media (max-width: 767px) {
+  .sg-sub {
+    font-size: 6px;
+  }
+
+  .sg-intro {
+    height: 263vh;
+  }
+
+  .sg-intro-titles {
+    padding: 0 24px;
+  }
+
+  .sg-title {
+    font-size: 54px;
+  }
+
+  .sg-title-top {
+    top: 11%;
+    transform: translateY(calc(var(--p) * var(--p) * -103vh))
+      scale(calc(1 + var(--p) * var(--p) * 5));
+  }
+
+  .sg-title-bottom-wrap {
+    bottom: 19%;
+    transform: translateY(calc(var(--p) * var(--p) * 103vh))
+      scale(calc(1 + var(--p) * var(--p) * 5));
+  }
+
+  .sg-hint {
+    bottom: 112px;
+  }
+
+  .sg-hint-label {
+    font-size: 9.5px;
+  }
+
+  .sg-hint-inner {
+    gap: 8px;
+  }
+
+  /* The phone intro is title + hint only — no corner telemetry. */
+  .sg-intro-readout {
+    display: none;
+  }
+
+  .sg-eyebrow {
+    gap: 12px;
+    font-size: 9px;
+  }
+
+  .sg-eyebrow::before {
+    width: 34px;
+  }
+
+  /* 01 — a centred column with the portrait on top, no eyebrow. */
+  .sg-ch1 {
+    height: 217vh;
+  }
+
+  .sg-ch1-pin {
+    padding: 84px 22px 90px;
+  }
+
+  .sg-hero {
+    text-align: center;
+  }
+
+  .sg-hero-eyebrow {
+    display: none;
+  }
+
+  .sg-hero-grid,
+  .sg-hero-main {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .sg-hero-h1 {
+    font-size: 33px;
+    line-height: 1.08;
+    letter-spacing: -0.028em;
+  }
+
+  .sg-hero-p {
+    margin: 0;
+    font-size: 14.5px;
+    max-width: 34ch;
+  }
+
+  .sg-hero-actions {
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+    max-width: 280px;
+    margin: 6px 0 0;
+  }
+
+  .sg-hero-actions .sg-btn {
+    width: 100%;
+    padding: 0 16px;
+  }
+
+  .sg-chips {
+    justify-content: center;
+    gap: 8px;
+    margin-top: 4px;
+    font-size: 8.5px;
+    letter-spacing: 0.12em;
+  }
+
+  .sg-chip {
+    padding: 7px 11px;
+  }
+
+  .sg-portrait {
+    order: -1;
+    width: 96px;
+    height: 96px;
+    border-color: oklch(0.82 0.13 72 / 0.35);
+    box-shadow: 0 0 46px -12px oklch(0.82 0.13 72 / 0.55);
+  }
+
+  /* 02 */
+  .sg-ch2 {
+    min-height: 332vh;
+    padding: 0;
+  }
+
+  .sg-ch2-pin {
+    gap: 14px;
+    padding: 76px 20px 94px;
+  }
+
+  .sg-ch2-head {
+    gap: 12px;
+  }
+
+  .sg-ch2-head .sg-eyebrow {
+    margin-bottom: 12px;
+  }
+
+  .sg-h2 {
+    font-size: 25px;
+    letter-spacing: -0.025em;
+    line-height: 1.06;
+  }
+
+  .sg-ch2-meta {
+    gap: 3px;
+    padding-bottom: 3px;
+    font-size: 8.5px;
+  }
+
+  .sg-count {
+    font-size: 12px;
+  }
+
+  .sg-card {
+    border-radius: 14px;
+    box-shadow: 0 30px 70px -45px rgba(0, 0, 0, 0.9);
+  }
+
+  .sg-card-scrim {
+    background: linear-gradient(
+      0deg,
+      rgba(12, 17, 25, 0.9) 0%,
+      rgba(12, 17, 25, 0.12) 48%,
+      transparent 100%
+    );
+  }
+
+  .sg-card-tag {
+    top: 10px;
+    left: 10px;
+    padding: 4px 7px;
+    font-size: 7.5px;
+    letter-spacing: 0.14em;
+  }
+
+  .sg-card-body {
+    padding: 10px 12px 12px;
+    gap: 6px;
+  }
+
+  .sg-card-title {
+    font-size: 14px;
+    letter-spacing: -0.015em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .sg-card-desc {
+    font-size: 12px;
+  }
+
+  /* No room for the stack icons in a mosaic cell this size. */
+  .sg-icons {
+    display: none;
+  }
+
+  .sg-card-foot {
+    margin-top: 0;
+  }
+
+  .sg-card-live {
+    font-size: 8.5px;
+  }
+
+  /* 03 — not pinned on phones; it scrolls normally under the comet. */
+  .sg-ch3 {
+    padding: 64px 20px 60px;
+  }
+
+  .sg-ch3 .sg-h2 {
+    font-size: 27px;
+    line-height: 1.1;
+  }
+
+  .sg-ch3 .sg-eyebrow {
+    margin-bottom: 14px;
+  }
+
+  .sg-ch3-note {
+    font-size: 13px;
+    line-height: 1.6;
+  }
+
+  .sg-track {
+    margin-top: 28px;
+    padding-left: 28px;
+  }
+
+  .sg-track-rail,
+  .sg-track-fill {
+    left: 9px;
+    top: 6px;
+  }
+
+  .sg-track-rail {
+    bottom: 6px;
+  }
+
+  .sg-comet {
+    left: 10px;
+    top: 6px;
+    width: 12px;
+    height: 12px;
+    margin-left: -6px;
+    margin-top: -6px;
+    box-shadow: 0 0 16px 4px oklch(0.82 0.13 72 / 0.8),
+      0 0 40px 10px oklch(0.82 0.13 72 / 0.3);
+  }
+
+  .sg-tl {
+    grid-template-columns: 1fr;
+    gap: 4px;
+    padding-bottom: 26px;
+  }
+
+  .sg-tl-dot {
+    left: -24px;
+    top: 5px;
+    width: 9px;
+    height: 9px;
+  }
+
+  .sg-tl-when {
+    padding-top: 0;
+    font-size: 8.5px;
+    letter-spacing: 0.18em;
+  }
+
+  .sg-tl-body {
+    gap: 4px;
+  }
+
+  .sg-tl-body h3 {
+    font-size: 15.5px;
+    letter-spacing: -0.015em;
+  }
+
+  .sg-tl-body p {
+    font-size: 12.5px;
+  }
+
+  /* 04 */
+  .sg-ch4 {
+    min-height: 87vh;
+    padding: 60px 24px 140px;
+  }
+
+  .sg-ch4-grid {
+    width: 150%;
+    opacity: 0.3;
+  }
+
+  .sg-reveal {
+    gap: 16px;
+  }
+
+  .sg-ch4-eyebrow {
+    font-size: 9px;
+  }
+
+  .sg-ch4-h2 {
+    font-size: 26px;
+    line-height: 1.15;
+    letter-spacing: -0.028em;
+    max-width: 20ch;
+  }
+
+  .sg-ch4-p {
+    font-size: 13.5px;
+    line-height: 1.6;
+    max-width: 34ch;
+  }
+
+  .sg-socials {
+    gap: 10px;
+    margin-top: 4px;
+  }
+
+  .sg-copyright {
+    font-size: 11px;
+    margin-top: 10px;
+  }
+
+  /* Stage bar folds to two rows: chapters, then telemetry. */
+  .sg-hud {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    padding: 10px 16px calc(14px + env(safe-area-inset-bottom));
+  }
+
+  .sg-hud-stages {
+    gap: 9px;
+  }
+
+  .sg-stage-link {
+    gap: 5px;
+    font-size: 8px;
+    letter-spacing: 0.12em;
+  }
+
+  .sg-hud-read {
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 8.5px;
+    letter-spacing: 0.1em;
+  }
+
+  .sg-hud-metrics {
+    gap: 0;
+  }
+
+  .sg-hud-metrics > :not(:first-child)::before {
+    content: "·";
+    padding: 0 6px;
+  }
+
+  /* dt'/dt doesn't fit next to τ at 402px. */
+  .sg-hud-dil {
+    display: none;
+  }
+
+  .sg-label-long {
+    display: none;
+  }
+
+  .sg-label-short {
+    display: inline;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sg-root *,
+  .sg-root *::before,
+  .sg-root *::after {
+    animation: none !important;
+  }
+}

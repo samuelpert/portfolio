@@ -1,17 +1,19 @@
 "use client";
 
-import React, { useRef, useEffect, useState } from "react";
+import React, { useRef, useEffect } from "react";
+import { MOBILE_QUERY } from "./singularity/engine";
 
 /**
  * BlackHoleCanvas
  *
  * Mounts the tuned WebGPU raymarched black hole (ported from the standalone
  * `webgpu-black-hole` project) into a self-sizing box. It is a *passive* visual:
- * a fixed camera, bloom post-processing, no OrbitControls — the parent
- * (CinematicIntro) scales the whole box via CSS to create the "fall in" effect.
+ * no OrbitControls — the intro dollies the camera from scroll, re-raymarching
+ * every frame at native resolution, so the plunge stays sharp.
  *
- * `control` lets the parent pause/resume the render loop (e.g. once the user has
- * scrolled past the intro) so we don't keep raymarching off-screen.
+ * `control` lets the parent drive and pause that camera. `onStatus` reports
+ * whether the raymarcher came up at all: without WebGPU there is no black hole,
+ * and the intro drops itself rather than showing an empty sky.
  */
 
 export interface BlackHoleControl {
@@ -28,7 +30,9 @@ const BLACK_HOLE_CONFIG = {
   blackHoleMass: 0.4,
   diskInnerRadius: 4.1,
   diskOuterRadius: 14.5,
-  diskTemperature: 49.78,
+  // Cooled from 49.78 so the blackbody disc sits gold rather than white-hot —
+  // the same gold the rest of the page is accented in.
+  diskTemperature: 42,
   temperatureFalloff: 5.22,
   diskBrightness: 5,
   diskRotationSpeed: -8.7,
@@ -63,24 +67,27 @@ const BLOOM = { strength: 0.68, radius: 0.2, threshold: 0.4 };
 
 interface Props {
   control?: React.MutableRefObject<BlackHoleControl | null>;
+  /** Called once with whether the raymarcher is running. */
+  onStatus?: (ready: boolean) => void;
 }
 
-const BlackHoleCanvas: React.FC<Props> = ({ control }) => {
+const BlackHoleCanvas: React.FC<Props> = ({ control, onStatus }) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [error, setError] = useState<string | null>(null);
+  const onStatusRef = useRef(onStatus);
+  onStatusRef.current = onStatus;
 
   useEffect(() => {
     let cancelled = false;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let renderer: any = null;
-    let resizeHandler: (() => void) | null = null;
+    let observer: ResizeObserver | null = null;
 
     async function init() {
       const container = containerRef.current;
       if (!container) return;
 
       if (!navigator.gpu) {
-        setError("WebGPU is not supported in this browser.");
+        onStatusRef.current?.(false);
         return;
       }
 
@@ -98,14 +105,19 @@ const BlackHoleCanvas: React.FC<Props> = ({ control }) => {
 
         const w = container.clientWidth || window.innerWidth;
         const h = container.clientHeight || window.innerHeight;
+        const mobile = window.matchMedia(MOBILE_QUERY).matches;
 
         // MSAA is pointless here (the whole frame is one raymarched quad, no
         // geometric edges) and a capped pixel ratio keeps the per-pixel
         // raymarch affordable on retina displays — bloom softens the result
-        // anyway, so the lower internal resolution is not visible.
+        // anyway, so the lower internal resolution is not visible. Phones take
+        // the extra step down to 1: a per-pixel raymarch at 3x is not something
+        // a phone GPU should be asked to do 60 times a second.
         renderer = new THREE.WebGPURenderer({ antialias: false });
         renderer.setSize(w, h);
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.25));
+        renderer.setPixelRatio(
+          Math.min(window.devicePixelRatio, mobile ? 1 : 1.25)
+        );
         renderer.toneMapping = THREE.ACESFilmicToneMapping;
         Object.assign(renderer.domElement.style, {
           width: "100%",
@@ -124,10 +136,14 @@ const BlackHoleCanvas: React.FC<Props> = ({ control }) => {
 
         // Camera dolly path — the "fall in". progress 0 → 1 flies the camera from
         // a wide shot toward the disc, re-raymarched every frame at native
-        // resolution (so it stays sharp, unlike CSS-scaling the canvas).
-        const CAM_FAR = { x: 0, y: -5, z: 20 };
+        // resolution (so it stays sharp, unlike CSS-scaling the canvas). The
+        // portrait start sits further out and lower, so the disc still reads as
+        // a disc in a 9:19.5 frame.
+        const CAM_FAR = mobile
+          ? { x: 0, y: -5.1, z: 20 }
+          : { x: 0, y: -4.6, z: 18 };
         // Dives in past the disc's inner edge, almost to the horizon — the
-        // "inside the black hole" plunge. The darkening veil in CinematicIntro
+        // "inside the black hole" plunge. The darkening veil over the intro
         // masks the final, most extreme frames.
         const CAM_NEAR = { x: 0, y: -0.4, z: 1.4 };
         let camProgress = 0;
@@ -195,7 +211,9 @@ const BlackHoleCanvas: React.FC<Props> = ({ control }) => {
           };
         }
 
-        resizeHandler = () => {
+        // A ResizeObserver rather than a window listener: on mobile the URL bar
+        // collapsing changes the container's height without a resize event.
+        observer = new ResizeObserver(() => {
           const cw = container.clientWidth;
           const ch = container.clientHeight;
           if (!cw || !ch) return;
@@ -203,11 +221,13 @@ const BlackHoleCanvas: React.FC<Props> = ({ control }) => {
           camera.updateProjectionMatrix();
           renderer.setSize(cw, ch);
           simulation.onResize(cw, ch);
-        };
-        window.addEventListener("resize", resizeHandler);
+        });
+        observer.observe(container);
+
+        onStatusRef.current?.(true);
       } catch (err) {
-        console.error("Black hole initialization failed:", err);
-        setError(err instanceof Error ? err.message : String(err));
+        console.warn("Black hole initialization failed:", err);
+        onStatusRef.current?.(false);
       }
     }
 
@@ -215,7 +235,7 @@ const BlackHoleCanvas: React.FC<Props> = ({ control }) => {
 
     return () => {
       cancelled = true;
-      if (resizeHandler) window.removeEventListener("resize", resizeHandler);
+      observer?.disconnect();
       if (control) control.current = null;
       if (renderer) {
         renderer.setAnimationLoop(null);
@@ -226,30 +246,13 @@ const BlackHoleCanvas: React.FC<Props> = ({ control }) => {
     };
   }, [control]);
 
+  // No error UI: when this can't run, the intro removes itself and the visitor
+  // lands on the hero instead of on an apology.
   return (
     <div
       ref={containerRef}
       style={{ width: "100%", height: "100%", position: "relative" }}
-    >
-      {error && (
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            color: "#ff8a6b",
-            fontFamily: "monospace",
-            fontSize: "0.85rem",
-            textAlign: "center",
-            padding: "1rem",
-          }}
-        >
-          {error}
-        </div>
-      )}
-    </div>
+    />
   );
 };
 
