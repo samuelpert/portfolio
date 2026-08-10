@@ -33,7 +33,7 @@ export const MOBILE_QUERY = "(max-width: 767px)";
 type Cell = { x: number; y: number; w: number; h: number };
 
 export interface Tuning {
-  /** Where the four cards land once they've settled. */
+  /** Where the cards land once they've settled — one cell per project. */
   mosaic: Cell[];
   /** Fraction of the chapter's scroll spent bringing cards onto the deck. */
   enterEnd: number;
@@ -85,10 +85,9 @@ export interface Tuning {
 
 export const DESKTOP: Tuning = {
   mosaic: [
-    { x: 0, y: 0, w: 0.575, h: 0.56 },
+    { x: 0, y: 0, w: 0.575, h: 1 },
     { x: 0.59, y: 0, w: 0.41, h: 0.34 },
     { x: 0.59, y: 0.36, w: 0.41, h: 0.64 },
-    { x: 0, y: 0.58, w: 0.575, h: 0.42 },
   ],
   enterEnd: 0.74,
   settleWindow: 0.2,
@@ -122,10 +121,9 @@ export const DESKTOP: Tuning = {
 
 export const MOBILE: Tuning = {
   mosaic: [
-    { x: 0, y: 0, w: 0.56, h: 0.48 },
+    { x: 0, y: 0, w: 0.56, h: 1 },
     { x: 0.58, y: 0, w: 0.42, h: 0.31 },
     { x: 0.58, y: 0.33, w: 0.42, h: 0.67 },
-    { x: 0, y: 0.5, w: 0.56, h: 0.5 },
   ],
   enterEnd: 0.72,
   settleWindow: 0.22,

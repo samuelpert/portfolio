@@ -30,9 +30,9 @@ export const copy = {
   // The hero paragraph is tightened on phones — the desktop sentence wraps to
   // five lines at 402px and pushes the buttons under the fold.
   introDesktop:
-    "I am a Sophomore Computer Science Undergrad at Florida International University (FIU), focused on machine learning development and full-stack web applications. Open to software engineering and ML internships.",
+    "I am a Junior Computer Science Undergrad at Florida International University (FIU), focused on machine learning development and full-stack web applications. Open to software engineering and ML internships.",
   introMobile:
-    "Sophomore Computer Science undergrad at FIU, focused on machine learning and full-stack web applications. Open to SWE and ML internships.",
+    "Junior Computer Science undergrad at FIU, focused on machine learning and full-stack web applications. Open to SWE and ML internships.",
   timelineNote: "Where I've been and what I shipped there, most recent first.",
   outro: "Let's connect and explore how I can contribute to your team.",
 };
@@ -65,46 +65,39 @@ export const projects = [
     iconLists: ["/ts.svg", "/re.svg", "/vite.svg", "/chakra.svg"],
     link: "https://game-hub-kappa-gray.vercel.app/",
   },
-  {
-    id: 4,
-    title: "Stock Market Simulator",
-    tag: "Full stack",
-    img: "/p4.webp",
-    des: "A full-stack simulator where users create an account to buy, sell and quote stocks and review their transaction history. Built for an academic course.",
-    iconLists: ["/fl.svg", "/sql.svg"],
-    link: "https://game-hub-kappa-gray.vercel.app/",
-  },
 ];
 
-/**
- * Chapter 03. These entries are the mockup's placeholders — swap `when` for
- * real dates (and drop the last row) once the timeline content exists.
- */
+/** Chapter 03. Roles and builds, most recent first. */
 export const timeline = [
   {
-    when: "Now",
-    title: "Sophomore, Computer Science — FIU",
-    body: "Coursework in algorithms and systems alongside self-directed ML and web work. Seeking a summer SWE or ML internship.",
+    when: "May 2026 — Present",
+    title: "Future Innovators Mentorship Program — Blackstone",
+    body: "Connecting future interns with Blackstone Technology & Innovations professionals for 1:1 guidance, career advice and industry insight ahead of their internships.",
   },
   {
-    when: "Recent",
+    when: "Mar 2026 — Present",
+    title: "Computer Support Technician — Student Athlete Academic Center, FIU",
+    body: "Diagnosing software and hardware issues for staff and students, and imaging and deploying machines alongside the IT team to keep the center running.",
+  },
+  {
+    when: "May — Jun 2025",
+    title: "Software Engineering Intern — PantherSoft, FIU",
+    body: "Crawled 15+ FIU sites with Crawl4AI and tuned accuracy ~15%, embedded 80,000+ data points into Qdrant on Google Cloud, and built the N8N proof-of-concept adopted for FIU's AI student response system serving 50,000+ students.",
+  },
+  {
+    when: "Feb — May 2025",
+    title: "E3 Recruitment Lead — CodePath",
+    body: "Grew the E3 scholars community at FIU through campus recruitment and 1:1 mentorship, registering 118+ students during the spring term.",
+  },
+  {
+    when: "Feb — Apr 2025",
     title: "AI team — Sign Language Recognizer Glove",
-    body: "Gesture recognition and custom dataset work that raised the glove's recognition precision.",
+    body: "Built the Python ML pipeline for a glove that translates ASL in real time from flex-sensor and gyroscope data, reaching 95% accuracy with a Random Forest model.",
   },
   {
-    when: "Recent",
-    title: "Personal portfolio — samuelpt.dev",
-    body: "Designed and shipped the Next.js + Three.js singularity site that brought you here.",
-  },
-  {
-    when: "Earlier",
-    title: "Game Hub v1 & Stock Market Simulator",
-    body: "First full-stack builds: a 350k-title game explorer, and an account-based trading simulator.",
-  },
-  {
-    when: "Horizon",
-    title: "Placeholder — send me your dates",
-    body: "These rows swap out the moment real timeline content lands.",
+    when: "Expected Spring 2028",
+    title: "B.S. Computer Science — Florida International University",
+    body: "Junior in Miami, FL. Coursework across algorithms, discrete structures and systems, alongside INIT, CodePath and Break Through Tech Miami.",
   },
 ];
 
