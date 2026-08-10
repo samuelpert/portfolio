@@ -1,5 +1,4 @@
 import React from "react";
-import Image from "next/image";
 import { copy, RESUME_URL } from "@/app/data";
 import { trackResumeClick } from "../GoogleAnalytics";
 
@@ -24,8 +23,8 @@ const Words: React.FC<{ text: string }> = ({ text }) => (
 /**
  * 01 Event horizon — the hero, pinned for two screens while it emerges.
  *
- * Desktop is a two-column split with the portrait on the right; phones stack it
- * into a centred column with the portrait on top (`order: -1`) and no eyebrow.
+ * A single measure of type on both breakpoints; phones centre it and drop the
+ * eyebrow.
  */
 const HeroSection: React.FC = () => (
   <section className="sg-ch1" data-ch id="ch1">
@@ -75,17 +74,6 @@ const HeroSection: React.FC = () => (
                 <span className="sg-label-short">FIU · CS</span>
               </span>
             </div>
-          </div>
-
-          <div className="sg-portrait" data-hero-rest>
-            <Image
-              src="/headshot.png"
-              alt="Samuel Perez Tovar"
-              width={1023}
-              height={1537}
-              sizes="(max-width: 767px) 96px, 320px"
-              priority
-            />
           </div>
         </div>
       </div>
