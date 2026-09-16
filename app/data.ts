@@ -8,7 +8,7 @@
 export const EMAIL = "samuelpertov@gmail.com";
 
 export const RESUME_URL =
-  "https://acrobat.adobe.com/id/urn:aaid:sc:US:047ab663-7ce6-4961-bb73-3ecd1bb59fb2";
+  "https://acrobat.adobe.com/id/urn:aaid:sc:US:7dd0f739-a72f-48ac-87e7-fa2f0ad8801c";
 
 /** Bottom stage bar. `short` is used on phones, where the cells are ~80px wide. */
 export const chapters = [
